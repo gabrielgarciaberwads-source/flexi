@@ -6,10 +6,45 @@ const fs = require('node:fs');
 const noHorizontalOverflow = page => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 const columnCount = locator => locator.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
 const prepareScreenshot = page => page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });
+const normalTargetViolations = (page, root, denseSelectors = []) => page.locator(root).evaluate((container, dense) => {
+  const visible = element => {
+    const style = getComputedStyle(element), rect = element.getBoundingClientRect();
+    return !element.hidden && style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+  };
+  const controls = [...new Set(container.querySelectorAll('button,a[href],input:not([type="hidden"]),select,textarea,[role="button"],[tabindex]:not([tabindex="-1"])'))];
+  return controls.filter(element => visible(element) && !dense.some(selector => element.matches(selector) || element.closest(selector))).map(element => {
+    const rect = element.getBoundingClientRect();
+    return { label: element.getAttribute('aria-label') || element.textContent.trim(), tag: element.tagName.toLowerCase(), width: rect.width, height: rect.height };
+  }).filter(item => item.width + .5 < 44 || item.height + .5 < 44);
+}, denseSelectors);
+const denseSizeAudit = (page, selectors) => page.evaluate(selectorsToAudit => {
+  const visible = element => {
+    const style = getComputedStyle(element), rect = element.getBoundingClientRect();
+    return !element.hidden && style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+  };
+  return selectorsToAudit.map(selector => {
+    const items = [...document.querySelectorAll(selector)].filter(visible).map(element => {
+      const rect = element.getBoundingClientRect();
+      return { label: element.getAttribute('aria-label') || element.textContent.trim(), width: rect.width, height: rect.height };
+    });
+    return { selector, count: items.length, violations: items.filter(item => item.width + .5 < 24 || item.height + .5 < 24) };
+  });
+}, selectors);
+const expectDenseSizes = async (page, selectors) => {
+  const audit = await denseSizeAudit(page, selectors);
+  expect(audit.every(item => item.count > 0)).toBe(true);
+  expect(audit.flatMap(item => item.violations.map(violation => ({ selector: item.selector, ...violation })))).toEqual([]);
+};
+const activeElementIsUsable = page => page.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.isConnected && !document.activeElement.closest('[inert]'));
+const accessibilityRoleExists = async (session, role, nameFragment) => {
+  const { nodes } = await session.send('Accessibility.getFullAXTree');
+  return nodes.some(node => !node.ignored && node.role?.value === role && node.name?.value?.includes(nameFragment));
+};
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+  const accessibilitySession = await page.context().newCDPSession(page);
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -32,6 +67,9 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await expect(page.locator('[data-dashboard-metric="total"]')).toHaveText('60');
     await page.locator('.skip-link').focus();
     await expect(page.locator('.skip-link')).toBeVisible();
+    expect(await accessibilityRoleExists(accessibilitySession, 'link', 'Pular para o conte')).toBe(true);
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#main-content')).toBeFocused();
     await page.locator('[data-action="new"]').focus();
     await expect(page.locator('[data-action="new"]')).toHaveCSS('outline-style', 'solid');
     await page.screenshot({ path: path.join(artifacts, 'dashboard-focus.png'), fullPage: true, animations: 'disabled' });
@@ -54,18 +92,19 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeVisible();
     expect(await columnCount(page.locator('.metric-grid'))).toBe(2);
     expect(await columnCount(page.locator('.dashboard-columns'))).toBe(1);
-    const undersizedDashboardControls = await page.locator('button:visible,input:visible,select:visible,textarea:visible').evaluateAll(elements => elements.filter(element => {
-      const rect = element.getBoundingClientRect();
-      return rect.width < 44 || rect.height < 44;
-    }).map(element => ({ label: element.getAttribute('aria-label') || element.textContent.trim(), width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height })));
-    expect(undersizedDashboardControls).toEqual([]);
+    expect(await normalTargetViolations(page, '#app')).toEqual([]);
     await page.screenshot({ path: path.join(artifacts, 'dashboard-mobile.png'), fullPage: true, animations: 'disabled' });
     await page.getByRole('button', { name: 'Abrir menu' }).click();
     await expect(page.locator('.sidebar')).toBeVisible();
+    await expect(page.locator('.skip-link')).toHaveJSProperty('inert', true);
     await expect(page.locator('#main-content')).toHaveJSProperty('inert', true);
+    await expect(page.locator('#notifications')).toHaveJSProperty('inert', true);
     await expect(page.locator('.sidebar')).toHaveJSProperty('inert', false);
+    await expect(page.locator('.sidebar-backdrop')).toHaveJSProperty('inert', false);
+    expect(await accessibilityRoleExists(accessibilitySession, 'link', 'Pular para o conte')).toBe(false);
     await expect(page.locator('.workspace')).toBeVisible();
     await expect(page.locator('#nav button').first().locator('span')).toBeVisible();
+    expect(await normalTargetViolations(page, '#sidebar')).toEqual([]);
     expect((await page.locator('.brand-logo').boundingBox()).width).toBeGreaterThanOrEqual(130);
     await expect(page.getByRole('button', { name: 'Fechar menu' }).first()).toBeFocused();
     await page.keyboard.press('Shift+Tab');
@@ -73,14 +112,27 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.screenshot({ path: path.join(artifacts, 'dashboard-mobile-menu.png'), animations: 'disabled' });
     await page.keyboard.press('Escape');
     await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('.skip-link')).toHaveJSProperty('inert', false);
     await expect(page.locator('#main-content')).toHaveJSProperty('inert', false);
+    await expect(page.locator('#notifications')).toHaveJSProperty('inert', false);
     await expect(page.locator('.sidebar')).toHaveJSProperty('inert', true);
+    await expect(page.locator('.sidebar-backdrop')).toHaveJSProperty('inert', true);
     await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeFocused();
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.getByRole('button', { name: 'Abrir menu' }).click();
     await expect(page.locator('.sidebar')).toHaveCSS('transition-duration', '0s');
     await page.keyboard.press('Escape');
     await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.getByRole('button', { name: 'Abrir menu' }).click();
+    await page.locator('#sidebar [data-nav="calendar"]').click();
+    await expect(page.getByRole('heading', { name: 'Calendário de semanas', exact: true })).toBeFocused();
+    await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('#main-content')).toHaveJSProperty('inert', false);
+    expect(await activeElementIsUsable(page)).toBe(true);
+    await page.getByRole('button', { name: 'Abrir menu' }).click();
+    await page.locator('#sidebar [data-nav="dashboard"]').click();
+    await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeFocused();
+    expect(await activeElementIsUsable(page)).toBe(true);
     await page.setViewportSize({ width: 1440, height: 960 });
     await expect(page.locator('.sidebar')).toBeVisible();
 
@@ -97,16 +149,25 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.keyboard.press('Enter');
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByRole('dialog')).toBeFocused();
+    expect(await page.evaluate(() => [...document.body.children].filter(element => element.id !== 'layers' && element.tagName !== 'SCRIPT').every(element => element.inert))).toBe(true);
+    await expect(page.locator('.skip-link')).toHaveJSProperty('inert', true);
     await expect(page.locator('#main-content')).toHaveJSProperty('inert', true);
     await expect(page.locator('.sidebar')).toHaveJSProperty('inert', true);
+    await expect(page.locator('.sidebar-backdrop')).toHaveJSProperty('inert', true);
+    await expect(page.locator('#notifications')).toHaveJSProperty('inert', true);
+    expect(await accessibilityRoleExists(accessibilitySession, 'link', 'Pular para o conte')).toBe(false);
+    expect(await page.evaluate(() => { document.querySelector('.skip-link').focus(); return document.activeElement.matches('#layers [role="dialog"]'); })).toBe(true);
     const drawerButtons = page.getByRole('dialog').locator('button:not(:disabled)');
     await drawerButtons.last().focus();
     await page.keyboard.press('Tab');
     await expect(drawerButtons.first()).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(dashboardWeekTrigger).toBeFocused();
+    await expect(page.locator('.skip-link')).toHaveJSProperty('inert', false);
     await expect(page.locator('#main-content')).toHaveJSProperty('inert', false);
     await expect(page.locator('.sidebar')).toHaveJSProperty('inert', false);
+    await expect(page.locator('.sidebar-backdrop')).toHaveJSProperty('inert', true);
+    await expect(page.locator('#notifications')).toHaveJSProperty('inert', false);
     await page.getByLabel('Buscar no painel').fill('TR-0087');
     await page.locator('#dashboard-service .dashboard-row').click();
     await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeVisible();
@@ -141,13 +202,65 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     expect(await page.evaluate(() => calendarDate)).toBe('2027-04-15');
     await expect(page.locator('.month-weekdays span')).toHaveText(['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']);
     await expect(page.locator('#kind-filter option')).toHaveText(['Todos', 'Casas', 'Flats']);
-    const statusContrast = await page.locator('.month-event').evaluateAll(elements => {
-      const channel = value => { value /= 255; return value <= .03928 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4; };
-      const luminance = value => { const rgb = value.match(/\d+/g).slice(0, 3).map(Number).map(channel); return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2]; };
-      const contrast = (foreground, background) => { const a = luminance(foreground), b = luminance(background); return (Math.max(a, b) + .05) / (Math.min(a, b) + .05); };
-      return [...new Map(elements.map(element => { const style = getComputedStyle(element), state = [...element.classList].find(name => ['available','use','waiting','reserved','blocked','noanswer'].includes(name)); return [state, contrast(style.color, style.backgroundColor)]; })).entries()];
-    });
-    expect(statusContrast.every(([, ratio]) => ratio >= 4.5)).toBe(true);
+    const semanticStates = ['available', 'blocked', 'noanswer', 'reserved', 'use', 'waiting'];
+    const semanticLabels = { available: 'Disponível no banco', use: 'Uso confirmado', waiting: 'Pedido de troca aberto', reserved: 'Em negociação', blocked: 'Bloqueada · inadimplência', noanswer: 'Sem retorno' };
+    const statusContrast = [];
+    for (const state of semanticStates) {
+      await page.getByLabel('Situação', { exact: true }).selectOption(state);
+      const stateRatios = await page.locator('.month-event').evaluateAll((elements, expectedState) => {
+        const channel = value => { value /= 255; return value <= .03928 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4; };
+        const luminance = value => { const rgb = value.match(/\d+/g).slice(0, 3).map(Number).map(channel); return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2]; };
+        const contrast = (foreground, background) => { const a = luminance(foreground), b = luminance(background); return (Math.max(a, b) + .05) / (Math.min(a, b) + .05); };
+        return elements.map(element => { const style = getComputedStyle(element); return { state: expectedState, ratio: contrast(style.color, style.backgroundColor) }; });
+      }, state);
+      expect(stateRatios.length).toBeGreaterThan(0);
+      statusContrast.push(...stateRatios);
+    }
+    await page.getByLabel('Situação', { exact: true }).selectOption('');
+    expect([...new Set(statusContrast.map(item => item.state))].sort()).toEqual(semanticStates);
+    expect(statusContrast.filter(item => item.ratio < 4.5)).toEqual([]);
+
+    // Every mobile target is audited; documented dense calendar items use the 24 px exception.
+    await page.setViewportSize({ width: 390, height: 844 });
+    const monthDenseSelectors = ['.month-day-number', '.month-event', '.month-overflow'];
+    expect(await normalTargetViolations(page, '.operational-calendar', monthDenseSelectors)).toEqual([]);
+    await expectDenseSizes(page, monthDenseSelectors);
+    const monthStatusCues = [];
+    for (const state of semanticStates) {
+      await page.getByLabel('Situação', { exact: true }).selectOption(state);
+      const stateCues = await page.locator('.month-event').evaluateAll((elements, expectedState) => elements.map(element => {
+        const symbol = element.querySelector('.status-symbol'), svg = symbol?.querySelector('svg'), style = symbol ? getComputedStyle(symbol) : null;
+        return { state: expectedState, accessibleName: element.getAttribute('aria-label'), visibleIcon: !!symbol && style.display !== 'none' && symbol.getBoundingClientRect().width > 0 && !!svg, icon: svg?.innerHTML || '' };
+      }), state);
+      expect(stateCues.length).toBeGreaterThan(0);
+      monthStatusCues.push(...stateCues);
+    }
+    await page.getByLabel('Situação', { exact: true }).selectOption('');
+    expect([...new Set(monthStatusCues.map(item => item.state))].sort()).toEqual(semanticStates);
+    expect(monthStatusCues.every(item => item.visibleIcon && item.accessibleName.includes(semanticLabels[item.state]))).toBe(true);
+    expect(new Set(monthStatusCues.map(item => item.icon)).size).toBe(semanticStates.length);
+    await page.locator('button[data-calendar-view="year"]').click();
+    const yearDenseSelectors = ['.mini-month-header', '.year-day:not(.outside)'];
+    expect(await normalTargetViolations(page, '.operational-calendar', yearDenseSelectors)).toEqual([]);
+    await expectDenseSizes(page, yearDenseSelectors);
+    const yearStatusShapes = [];
+    for (const state of semanticStates) {
+      await page.getByLabel('Situação', { exact: true }).selectOption(state);
+      const shape = await page.locator(`.year-marker.${state}`).first().evaluate(element => {
+        const style = getComputedStyle(element), fill = style.backgroundColor === 'rgba(0, 0, 0, 0)' ? 'transparent' : 'filled';
+        return `${style.clipPath}|${style.borderRadius}|${style.borderTopStyle}|${style.borderTopWidth}|${fill}`;
+      });
+      yearStatusShapes.push([state, shape]);
+    }
+    await page.getByLabel('Situação', { exact: true }).selectOption('');
+    expect(yearStatusShapes.map(([state]) => state).sort()).toEqual(semanticStates);
+    expect(new Set(yearStatusShapes.map(([, shape]) => shape)).size).toBe(semanticStates.length);
+    await page.locator('button[data-calendar-view="week"]').click();
+    const weekDenseSelectors = ['.week-item'];
+    expect(await normalTargetViolations(page, '.operational-calendar', weekDenseSelectors)).toEqual([]);
+    await expectDenseSizes(page, weekDenseSelectors);
+    await page.locator('button[data-calendar-view="month"]').click();
+    await page.setViewportSize({ width: 1440, height: 960 });
 
     // Segmented controls retain the exact context date and restore focus.
     await page.locator('button[data-calendar-view="year"]').focus();
@@ -434,9 +547,31 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
 
     // Observations are recorded in memory with author and the fixed demonstration date.
     await page.locator('[data-request="TR-0087"]').click();
-    await page.getByRole('button', { name: 'Adicionar observação' }).click();
+    await page.setViewportSize({ width: 900, height: 900 });
+    const exchangeTabletOverflow = await page.evaluate(() => {
+      const root = document.documentElement, main = document.querySelector('#main-content'), content = document.querySelector('#app');
+      return { viewport: root.clientWidth, document: root.scrollWidth, mainClient: main.clientWidth, mainScroll: main.scrollWidth, contentClient: content.clientWidth, contentScroll: content.scrollWidth };
+    });
+    expect(exchangeTabletOverflow.document).toBeLessThanOrEqual(exchangeTabletOverflow.viewport);
+    expect(exchangeTabletOverflow.mainScroll).toBeLessThanOrEqual(exchangeTabletOverflow.mainClient);
+    expect(exchangeTabletOverflow.contentScroll).toBeLessThanOrEqual(exchangeTabletOverflow.contentClient);
+    await page.screenshot({ path: path.join(artifacts, 'exchange-detail-tablet.png'), fullPage: true, animations: 'disabled' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await noHorizontalOverflow(page)).toBe(true);
+    expect(await normalTargetViolations(page, '#app')).toEqual([]);
+    await expectDenseSizes(page, ['.badge', '.exchange-option-rank', '.exchange-stage']);
+    await page.setViewportSize({ width: 1440, height: 960 });
+    const observationTrigger = page.getByRole('button', { name: 'Adicionar observação' });
+    await observationTrigger.click();
+    expect(await normalTargetViolations(page, '#layers')).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(observationTrigger).toBeFocused();
+    await observationTrigger.click();
     await page.getByRole('textbox', { name: 'Observação', exact: true }).fill('Titular prefere contato no período da tarde.');
     await page.getByRole('dialog').getByRole('button', { name: 'Adicionar observação', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Adicionar observação' })).toBeFocused();
+    expect(await activeElementIsUsable(page)).toBe(true);
     await expect(page.locator('.observation-item')).toContainText('Paula Silva');
     await expect(page.locator('.observation-item')).toContainText('29/09/2026');
     await expect(page.locator('.observation-item')).toContainText('Titular prefere contato no período da tarde.');
@@ -447,6 +582,8 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.evaluate(()=>{target.state='use'});
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar reserva' }).click();
     await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeFocused();
+    expect(await activeElementIsUsable(page)).toBe(true);
     expect(await page.evaluate(() => ({target:requests.find(r=>r.id==='TR-0087').target,state:target.state}))).toEqual({target:null,state:'use'});
     await page.evaluate(()=>{target.state='available';renderExchangeDetail()});
 
@@ -455,12 +592,15 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.evaluate(()=>{requests.push({id:'TR-0001',owner:'Concorrente',origin:'fixture',desired:[target.start],created:'2026-09-01',status:'Aberto',target:null,contact:false,evidence:''})});
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar reserva' }).click();
     await expect(page.getByText('A prioridade do pedido mudou para esta opção.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeFocused();
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').target)).toBeNull();
     await page.evaluate(()=>{requests=requests.filter(r=>r.id!=='TR-0001');renderExchangeDetail()});
 
     // A current reservation succeeds and leaves the origin with its owner.
     await page.getByRole('button', { name: 'Reservar', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar reserva' }).click();
+    await expect(page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' })).toBeFocused();
+    expect(await activeElementIsUsable(page)).toBe(true);
     const reservedState = await page.evaluate(() => {
       const request = requests.find(r => r.id === 'TR-0087');
       return { request, origin: getWeek(request.origin), target: getWeek(request.target) };
@@ -497,6 +637,7 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
     await expect(page.getByText('A semana original não atende à antecedência de 90 dias.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeFocused();
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(false);
     await page.evaluate(period => {
       const request = requests.find(r => r.id === 'TR-0087'), week = getWeek(request.origin);
@@ -508,11 +649,14 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.evaluate(()=>{const request=requests.find(r=>r.id==='TR-0087');request.status='Prazo vencido';request.expired=true});
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
     await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeFocused();
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(false);
     await page.evaluate(()=>{const request=requests.find(r=>r.id==='TR-0087');request.status='Em negociação';request.expired=false;renderExchangeDetail()});
 
     await page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
+    await expect(page.getByLabel('Anexar aceite de WhatsApp')).toBeFocused();
+    expect(await activeElementIsUsable(page)).toBe(true);
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(true);
 
     // WhatsApp evidence remains local and accepts only the documented file types.
@@ -547,6 +691,7 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     const evidenceSnapshot = await page.evaluate(()=>{const r=requests.find(item=>item.id==='TR-0087'),saved={evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType};r.evidence='evidencia-trocada.pdf';r.evidenceType='application/pdf';return saved});
     await page.getByRole('button', { name: 'Confirmar troca', exact: true }).click();
     await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeFocused();
     expect(await page.evaluate(()=>{const r=requests.find(item=>item.id==='TR-0087');return {status:r.status,origin:getWeek(r.origin).state,target:getWeek(r.target).state}})).toEqual({status:'Em negociação',origin:'waiting',target:'reserved'});
     await page.evaluate(saved=>{const r=requests.find(item=>item.id==='TR-0087');Object.assign(r,saved);renderExchangeDetail()},evidenceSnapshot);
     await expect(page.locator('#notifications')).toHaveText('');
@@ -554,6 +699,8 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.screenshot({ path: path.join(artifacts, 'confirmation.png'), animations: 'disabled' });
     await page.getByRole('button', { name: 'Confirmar troca', exact: true }).click();
     await expect(page.getByText('Troca concluída na simulação. Estoque atualizado.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ver Dashboard' })).toBeFocused();
+    expect(await activeElementIsUsable(page)).toBe(true);
     await expect(page.getByText('Troca concluída · somente leitura')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Adicionar observação' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Liberar reserva' })).toHaveCount(0);
@@ -600,10 +747,13 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     await page.evaluate(()=>{requests.find(r=>r.id==='TR-0082').target=null});
     await page.getByRole('dialog').getByRole('button', { name: 'Liberar reserva' }).click();
     await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeFocused();
     expect(await page.evaluate(targetId=>({requestTarget:requests.find(r=>r.id==='TR-0082').target,targetState:getWeek(targetId).state}),expiredTargetId)).toEqual({requestTarget:null,targetState:'reserved'});
     await page.evaluate(targetId=>{requests.find(r=>r.id==='TR-0082').target=targetId;renderExchangeDetail()},expiredTargetId);
     await page.getByRole('button', { name: 'Liberar reserva', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Liberar reserva' }).click();
+    await expect(page.locator('[data-action="reserve-start"]:not(:disabled)').first()).toBeFocused();
+    expect(await activeElementIsUsable(page)).toBe(true);
     const released = await page.evaluate(targetId => {
       const request = requests.find(r => r.id === 'TR-0082'), week = getWeek(targetId);
       return { request, week, firstCompatible: compatible(week)[0]?.id };
@@ -638,6 +788,8 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(await page.locator('.exchange-panels').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1);
     expect(await page.locator('.exchange-progress').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1);
+    expect(await normalTargetViolations(page, '#app')).toEqual([]);
+    await expectDenseSizes(page, ['.badge', '.exchange-stage']);
     await expect(page.locator('#notifications')).toHaveText('');
     await prepareScreenshot(page);
     await page.screenshot({ path: path.join(artifacts, 'exchange-detail-mobile.png'), fullPage: true, animations: 'disabled' });
@@ -651,17 +803,21 @@ const prepareScreenshot = page => page.evaluate(() => { if (document.activeEleme
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.locator('button[data-calendar-view="year"]').click();
     expect(await page.locator('.year-grid').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(2);
+    expect(await normalTargetViolations(page, '.operational-calendar', ['.mini-month-header', '.year-day:not(.outside)'])).toEqual([]);
+    await expectDenseSizes(page, ['.mini-month-header', '.year-day:not(.outside)']);
     await prepareScreenshot(page);
     await page.screenshot({ path: path.join(artifacts, 'calendar-year-mobile.png'), fullPage: true, animations: 'disabled' });
     await page.locator('button[data-calendar-view="month"]').click();
-    await expect(page.locator('.month-event-text').first()).toHaveCSS('display', 'none');
-    await expect(page.locator('.status-symbol').first()).toBeVisible();
-    expect(await page.locator('.month-event').first().evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(24);
+    expect(await page.locator('.month-event').evaluateAll(elements => elements.every(element => getComputedStyle(element.querySelector('.month-event-text')).display === 'none' && getComputedStyle(element.querySelector('.status-symbol')).display !== 'none'))).toBe(true);
+    expect(await normalTargetViolations(page, '.operational-calendar', ['.month-day-number', '.month-event', '.month-overflow'])).toEqual([]);
+    await expectDenseSizes(page, ['.month-day-number', '.month-event', '.month-overflow']);
     await prepareScreenshot(page);
     await page.screenshot({ path: path.join(artifacts, 'mobile.png'), fullPage: true });
     await page.screenshot({ path: path.join(artifacts, 'calendar-month-mobile.png'), fullPage: true, animations: 'disabled' });
     await page.locator('button[data-calendar-view="week"]').click();
     await expect(page.locator('.week-agenda')).toHaveCSS('flex-direction', 'column');
+    expect(await normalTargetViolations(page, '.operational-calendar', ['.week-item'])).toEqual([]);
+    await expectDenseSizes(page, ['.week-item']);
     await prepareScreenshot(page);
     await page.screenshot({ path: path.join(artifacts, 'calendar-week-mobile.png'), fullPage: true, animations: 'disabled' });
     await page.getByRole('button', { name: 'Ampliar calendário' }).click();

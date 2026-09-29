@@ -226,7 +226,7 @@ main,.content,.heading>div,.dashboard-tools,.calendar-commandbar,.calendar-filte
 .year-marker.available{border-radius:50%;clip-path:none}.year-marker.use{border-radius:1px;clip-path:none}.year-marker.waiting{border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)}
 .year-marker.reserved{border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.year-marker.blocked{border-radius:0;clip-path:polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%)}
 .year-marker.noanswer{border-radius:50%;background:transparent;border:1px solid #5c616a}
-.status-symbol{display:none}.calendar-segmented button,.calendar-navigation button,.focus-toggle,.square{min-height:44px}
+.status-symbol{display:none}.calendar-segmented button,.calendar-navigation button,.focus-toggle,.square{min-height:44px}.square{width:44px;min-width:44px}
 .calendar-segmented button[aria-pressed="true"],.calendar-segmented button[aria-pressed="true"]:hover:not(:disabled){background:var(--ink);border-color:var(--ink);color:#fff}
 .mini-month-header{min-height:40px}.year-day{min-height:28px}.month-day-number{min-width:36px;min-height:36px}.month-overflow{min-height:28px}
 .overlay{z-index:var(--z-layer);background:#1d1d1b52;overscroll-behavior:contain}.dialog-overlay{z-index:var(--z-dialog)}
@@ -354,14 +354,15 @@ function hasReservedPriority(r,t){return r?.reservedPriorityTarget===t?.id&&r.re
 function confirmationSnapshot(action,r,o,t){return {action,requestId:r?.id||'',requestStatus:r?.status||'',requestOwner:r?.owner||'',requestOrigin:r?.origin||'',requestTarget:r?.target||'',requestCreated:r?.created||'',expired:!!r?.expired,contact:!!r?.contact,evidence:r?.evidence||'',evidenceAt:r?.evidenceAt||'',evidenceType:r?.evidenceType||'',priorityTarget:r?.reservedPriorityTarget||'',priorityCreated:r?.reservedPriorityCreated||'',originId:o?.id||'',originState:o?.state||'',originOwner:o?.owner||'',originStart:o?.start||'',originEnd:o?.end||'',targetId:t?.id||'',targetState:t?.state||'',targetOwner:t?.owner||'',targetStart:t?.start||'',targetEnd:t?.end||''}}
 function confirmationMatches(snapshot,r,o,t){return !!snapshot&&activeRequest===snapshot.requestId&&JSON.stringify(confirmationSnapshot(snapshot.action,r,o,t))===JSON.stringify(snapshot)}
 function openExchangeConfirmation(snapshot,html){openLayer(html,true);pendingExchangeConfirmation=snapshot}
-function rejectExchangeConfirmation(message='As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.'){closeLayer();if(view==='negotiation')renderExchangeDetail();toast(message)}
+function rejectExchangeConfirmation(message='As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.'){closeLayer({restoreFocus:false});if(view==='negotiation'){renderExchangeDetail();focusRenderedTarget('.exchange-detail-heading h1')}toast(message)}
 function requestStatusClass(r){return r.status==='Concluído'?'available':r.expired?'waiting':r.target?'reserved':'use'}
 function exchangeBackLabel(){return {dashboard:'ao Dashboard',calendar:'ao Calendário',bank:'ao Banco de semanas',requests:'aos Pedidos'}[exchangeReturnView]||'aos Pedidos'}
 function toast(t){$('#notifications').innerHTML=`<div class="toast">${escapeHtml(t)}</div>`;setTimeout(()=>$('#notifications').innerHTML='',4500)}
 function nav(){const entries=[['dashboard','Dashboard','dashboard'],['calendar','Calendário','calendar'],['bank','Banco de semanas','bank'],['requests','Pedidos','requests'],['owners','Proprietários','users']];$('#nav').innerHTML=entries.map(([key,text,i])=>`<button data-nav="${key}" class="${view===key?'active':''}" aria-label="${text}" title="${text}" ${view===key?'aria-current="page"':''}>${icon(i)}<span>${text}</span></button>`).join('');$('#breadcrumb').textContent=entries.find(e=>e[0]===view)?.[1]|| (view==='new'?'Novo pedido':'Detalhe da troca')}
 function heading(title,subtitle,cta=true){return `<div class="heading"><div><h1>${title}</h1><p>${subtitle}</p></div>${cta?`<button class="primary" data-action="new">${icon('plus')} Novo pedido de troca</button>`:''}</div>`}
 function render(){nav();if(view==='dashboard')renderDashboard();if(view==='calendar')renderCalendar();if(view==='bank')renderBank();if(view==='requests')renderRequests();if(view==='owners')renderOwners();if(view==='new')renderNew();if(view==='negotiation')renderExchangeDetail()}
-function showView(v){closeLayer();if(sidebarOpen)setMobileNavigation(false,false);if(v!==view)setCalendarFocus(false,false);view=v;if(filtersByView[v])filters=filtersByView[v];render()}
+function focusRenderedTarget(selector){const target=$(selector)||$('#app h1')||$('#main-content');if(!target)return;if(!target.matches('button,a[href],input,select,textarea,[tabindex]'))target.tabIndex=-1;target.focus({preventScroll:true})}
+function showView(v){closeLayer();if(sidebarOpen){setMobileNavigation(false,false);mobileNavigationReturnFocus=null}if(v!==view)setCalendarFocus(false,false);view=v;if(filtersByView[v])filters=filtersByView[v];render();focusRenderedTarget('#app h1')}
 let calendarFocus=false,calendarPageScroll=0;
 function setCalendarFocus(enabled,restore=true){
   if(enabled===calendarFocus)return;
@@ -377,8 +378,12 @@ let sidebarOpen=false,mobileNavigationReturnFocus=null;
 function focusableElements(container){return [...container.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')].filter(element=>!element.hidden&&element.getClientRects().length)}
 function syncShellInert(){
   const hasLayer=!!$('#layers').children.length,isMobile=mobileNavigationQuery.matches;
-  $('#main-content').inert=hasLayer||(isMobile&&sidebarOpen);
+  const navigationBlocksShell=isMobile&&sidebarOpen,backgroundBlocked=hasLayer||navigationBlocksShell;
+  $('.skip-link').inert=backgroundBlocked;
+  $('#main-content').inert=backgroundBlocked;
+  $('#notifications').inert=backgroundBlocked;
   $('#sidebar').inert=hasLayer||(isMobile&&!sidebarOpen);
+  $('.sidebar-backdrop').inert=hasLayer||!navigationBlocksShell;
 }
 function setMobileNavigation(enabled,restore=true){
   if(!mobileNavigationQuery.matches)enabled=false;
@@ -587,7 +592,8 @@ function renderGrid(){
   $('#visible-count').textContent=`${visible} semanas ${bank?'disponíveis ':''}neste período`;
 }
 function openLayer(html,dialog=false){if(sidebarOpen)setMobileNavigation(false,true);if(!$('#layers').children.length)returnFocus=document.activeElement;$('#layers').innerHTML=`<div class="overlay ${dialog?'dialog-overlay':''}" data-backdrop="true"><section role="dialog" aria-modal="true" aria-labelledby="layer-title" class="${dialog?'dialog':'drawer'}" tabindex="-1">${html}</section></div>`;document.body.classList.add('layer-open');syncShellInert();$('#layers [role=dialog]').focus()}
-function closeLayer(){const hadLayer=!!$('#layers').children.length,focusTarget=returnFocus;$('#layers').innerHTML='';document.body.classList.remove('layer-open');pendingExchangeConfirmation=null;syncShellInert();if(hadLayer){returnFocus=null;if(focusTarget?.isConnected&&!focusTarget.inert)focusTarget.focus({preventScroll:true})}}
+function closeLayer({restoreFocus=true}={}){const hadLayer=!!$('#layers').children.length,focusTarget=returnFocus;$('#layers').innerHTML='';document.body.classList.remove('layer-open');pendingExchangeConfirmation=null;syncShellInert();if(hadLayer){returnFocus=null;if(restoreFocus&&focusTarget?.isConnected&&!focusTarget.closest('[inert]'))focusTarget.focus({preventScroll:true})}}
+function finishExchangeLayer(focusSelector,message){closeLayer({restoreFocus:false});renderExchangeDetail();focusRenderedTarget(focusSelector);toast(message)}
 function openWeek(id){const w=getWeek(id),u=getUnit(w),r=requests.find(r=>r.origin===id||r.target===id),matches=compatible(w);const eligible=w.original&&!w.traded&&w.state!=='blocked'&&w.state!=='available'&&!requests.some(r=>r.origin===id&&r.status!=='Concluído');openLayer(`<header class="drawer-head"><div><h2 id="layer-title">${u.name} · Tipologia ${u.type}</h2><p>${w.id} · ${range(w)}</p></div><button class="ghost square" data-action="close" aria-label="Fechar detalhes">${icon('close')}</button></header><div class="drawer-body">${badge(w)}<h3>Direito de uso</h3><dl class="info"><dt>Titular original</dt><dd>${escapeHtml(w.originalOwner)}</dd><dt>Direito de uso atual</dt><dd>${w.state==='available'||w.state==='reserved'?'Banco de semanas':escapeHtml(w.owner)}</dd><dt>Entrada</dt><dd>${full(w.start)} · ${u.kind==='Casa'?'quinta':'sexta'}-feira</dd><dt>Saída</dt><dd>${full(w.end)} · 7 noites</dd><dt>Cota vinculada</dt><dd>CT-${String(w.unit).padStart(3,'0')} · ${u.name}</dd></dl><h3>Situação operacional</h3><dl class="info"><dt>Intenção de uso</dt><dd>${w.state==='waiting'?'Quer trocar':w.state==='use'?'Vai usar':'Não informada'}</dd><dt>Disponibilidade</dt><dd>${w.state==='available'?'Efetivamente disponível':w.state==='reserved'?'Retida para negociação':'Fora do estoque disponível'}</dd><dt>Restrição</dt><dd>${w.state==='blocked'?'Inadimplência':'Nenhuma'}</dd><dt>Tipo de direito</dt><dd>${w.received?'Recebido em troca':w.original?'Semana original':'Estoque do banco'}</dd></dl>${w.received?'<div class="notice">Semana recebida em troca. Não elegível para uma nova troca.</div>':''}${w.state==='waiting'?'<div class="notice amber">Esta semana continua com o titular. Só entra no banco após a confirmação da troca.</div>':''}${w.state==='available'?`<h3>Pedidos compatíveis (${matches.length})</h3>${matches.length?matches.map((r,i)=>`<div class="option"><div><strong>${i+1}º · ${r.owner}</strong><p>Solicitado em ${full(r.created)} · ${r.id}</p></div><button class="link" data-request="${r.id}">Ver pedido</button></div>`).join(''):'<p class="muted small">Nenhum pedido aberto para esta semana.</p>'}`:''}<h3>Histórico recente</h3><div class="timeline">${w.history.length?w.history.map(h=>`<p><time>29/09/2026 · Paula Silva</time>${h}</p>`).join(''):'<p><time>10/09/2026 · Importação de demonstração</time>Semana cadastrada na base inicial.</p>'}</div></div><footer class="drawer-foot"><button data-action="close">Fechar</button>${r?`<button class="primary" data-request="${r.id}">Abrir pedido ${icon('right')}</button>`:eligible?`<button class="primary" data-origin="${id}">Criar pedido ${icon('plus')}</button>`:w.state==='available'?'<button class="primary" data-nav="requests">Consultar pedidos</button>':''}</footer>`)}
 function renderBank(){renderCalendar()}
 function renderRequests(){const list=[...requests].sort((a,b)=>a.created.localeCompare(b.created));$('#app').innerHTML=heading('Pedidos de troca','Prioridade pela data da solicitação original do titular.')+`<section class="surface"><div class="toolbar"><strong>${list.filter(r=>r.status!=='Concluído').length} pedidos abertos</strong><span class="muted small">A falta de resposta não altera a prioridade.</span></div><div class="table-wrap"><table><thead><tr><th>Pedido / titular</th><th>Solicitação original</th><th>Semana de origem</th><th>Procura</th><th>Situação</th><th></th></tr></thead><tbody>${list.map(r=>`<tr><td><strong>${escapeHtml(r.owner)}</strong><p>${r.id}</p></td><td>${full(r.created)}</td><td>${range(getWeek(r.origin))}<p>${getUnit(getWeek(r.origin)).name}</p></td><td>${r.desired.map(d=>full(d)).join('<br>')}<p>Check-in das opções desejadas</p></td><td><span class="badge ${r.status==='Concluído'?'available':r.expired?'waiting':r.target?'reserved':'use'}">${r.status==='Aberto'?(options(r).length?`${options(r).length} opção disponível`:'Aguardando oportunidade'):r.status}</span></td><td><button data-request="${r.id}">Abrir ${icon('right')}</button></td></tr>`).join('')}</tbody></table></div></section>`}
@@ -668,7 +674,7 @@ function confirmReserve(){
   const snapshot=pendingExchangeConfirmation,r=requests.find(item=>item.id===snapshot?.requestId),o=r?getWeek(r.origin):null,w=getWeek(snapshot?.targetId);
   if(snapshot?.action!=='reserve'||!confirmationMatches(snapshot,r,o,w))return rejectExchangeConfirmation();
   const issue=reserveIssue(r,o,w);if(issue)return rejectExchangeConfirmation(issue);
-  w.state='reserved';w.history.push(`Reservada para ${r.id}.`);r.target=w.id;r.status='Em negociação';r.expired=false;r.reservedPriorityTarget=w.id;r.reservedPriorityCreated=r.created;recordRequestHistory(r,`Opção ${w.id} reservada.`);closeLayer();renderExchangeDetail();toast('Opção reservada para este pedido.');
+  w.state='reserved';w.history.push(`Reservada para ${r.id}.`);r.target=w.id;r.status='Em negociação';r.expired=false;r.reservedPriorityTarget=w.id;r.reservedPriorityCreated=r.created;recordRequestHistory(r,`Opção ${w.id} reservada.`);finishExchangeLayer('[data-action="contact-start"]','Opção reservada para este pedido.');
 }
 function openContactDialog(){
   const r=requests.find(item=>item.id===activeRequest),o=r?getWeek(r.origin):null,t=r?.target?getWeek(r.target):null,issue=contactIssue(r,o,t,false);if(issue){toast(issue);renderExchangeDetail();return}
@@ -679,7 +685,7 @@ function confirmContact(){
   const snapshot=pendingExchangeConfirmation,r=requests.find(item=>item.id===snapshot?.requestId),o=r?getWeek(r.origin):null,t=getWeek(snapshot?.targetId);
   if(snapshot?.action!=='contact'||!confirmationMatches(snapshot,r,o,t))return rejectExchangeConfirmation();
   const issue=contactIssue(r,o,t);if(issue)return rejectExchangeConfirmation(issue);
-  r.contact=true;recordRequestHistory(r,'Contato registrado e antecedência de 90 dias verificada.');closeLayer();renderExchangeDetail();toast('Contato registrado. Antecedência de 90 dias verificada.');
+  r.contact=true;recordRequestHistory(r,'Contato registrado e antecedência de 90 dias verificada.');finishExchangeLayer('#evidence','Contato registrado. Antecedência de 90 dias verificada.');
 }
 function openReleaseDialog(){
   const r=requests.find(item=>item.id===activeRequest),o=r?getWeek(r.origin):null,w=r?.target?getWeek(r.target):null,issue=releaseIssue(r,o,w);if(issue){toast(issue);renderExchangeDetail();return}
@@ -690,7 +696,7 @@ function confirmRelease(){
   const snapshot=pendingExchangeConfirmation,r=requests.find(item=>item.id===snapshot?.requestId),o=r?getWeek(r.origin):null,w=getWeek(snapshot?.targetId);
   if(snapshot?.action!=='release'||!confirmationMatches(snapshot,r,o,w))return rejectExchangeConfirmation();
   const issue=releaseIssue(r,o,w);if(issue)return rejectExchangeConfirmation(issue);
-  const releasedId=w.id;w.state='available';w.history.push(`Reserva de ${r.id} liberada manualmente.`);r.target=null;r.status='Aberto';r.contact=false;clearEvidence(r);r.expired=false;r.reservedPriorityTarget='';r.reservedPriorityCreated='';recordRequestHistory(r,`Reserva de ${releasedId} liberada manualmente; pedido mantido aberto.`);closeLayer();renderExchangeDetail();toast('Reserva liberada. Prioridade do pedido preservada.');
+  const releasedId=w.id;w.state='available';w.history.push(`Reserva de ${r.id} liberada manualmente.`);r.target=null;r.status='Aberto';r.contact=false;clearEvidence(r);r.expired=false;r.reservedPriorityTarget='';r.reservedPriorityCreated='';recordRequestHistory(r,`Reserva de ${releasedId} liberada manualmente; pedido mantido aberto.`);finishExchangeLayer('[data-action="reserve-start"]:not(:disabled)','Reserva liberada. Prioridade do pedido preservada.');
 }
 function openReviewDialog(){
   const r=requests.find(item=>item.id===activeRequest),o=r?getWeek(r.origin):null,t=r?.target?getWeek(r.target):null,issue=exchangeIssue(r,o,t);if(issue){toast(issue);renderExchangeDetail();return}
@@ -701,7 +707,7 @@ function confirmExchange(){
   const snapshot=pendingExchangeConfirmation,r=requests.find(item=>item.id===snapshot?.requestId),o=r?getWeek(r.origin):null,t=getWeek(snapshot?.targetId);
   if(snapshot?.action!=='exchange'||!confirmationMatches(snapshot,r,o,t))return rejectExchangeConfirmation();
   const issue=exchangeIssue(r,o,t);if(issue)return rejectExchangeConfirmation(issue);
-  o.state='available';o.original=false;o.traded=true;o.history.push(`Entrou no banco pela troca ${r.id}.`);t.state='use';t.owner=r.owner;t.received=true;t.original=false;t.history.push(`Direito de uso atribuído a ${r.owner} por ${r.id}.`);r.status='Concluído';r.expired=false;recordRequestHistory(r,'Troca confirmada; origem enviada ao banco e destino atribuído ao proprietário.');closeLayer();renderExchangeDetail();toast('Troca concluída na simulação. Estoque atualizado.');
+  o.state='available';o.original=false;o.traded=true;o.history.push(`Entrou no banco pela troca ${r.id}.`);t.state='use';t.owner=r.owner;t.received=true;t.original=false;t.history.push(`Direito de uso atribuído a ${r.owner} por ${r.id}.`);r.status='Concluído';r.expired=false;recordRequestHistory(r,'Troca confirmada; origem enviada ao banco e destino atribuído ao proprietário.');finishExchangeLayer('.exchange-readonly-nav button','Troca concluída na simulação. Estoque atualizado.');
 }
 function openObservationDialog(){
   const r=requests.find(item=>item.id===activeRequest);if(!r||r.status==='Concluído')return;
@@ -709,7 +715,7 @@ function openObservationDialog(){
 }
 function saveObservation(){
   const r=requests.find(item=>item.id===activeRequest),field=$('#observation-text'),text=field?.value.trim();if(!r||r.status==='Concluído'||!text)return;
-  ensureRequestCollections(r).observations.push({date:DEMO_TODAY,author:OPERATOR,text});closeLayer();renderExchangeDetail();toast('Observação adicionada ao histórico da troca.');
+  ensureRequestCollections(r).observations.push({date:DEMO_TODAY,author:OPERATOR,text});finishExchangeLayer('[data-action="observation-start"]','Observação adicionada ao histórico da troca.');
 }
 document.addEventListener('click',e=>{
   const button=e.target.closest('button');if(!button||view!=='calendar')return;
