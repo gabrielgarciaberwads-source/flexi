@@ -323,14 +323,29 @@ const fs = require('node:fs');
     const domainRules = await page.evaluate(() => ({
       sevenNights: weeks.every(w => (date(w.end) - date(w.start)) / 86400000 === 7),
       checkinWeekday: weeks.every(w => date(w.start).getUTCDay() === (getUnit(w).kind === 'Casa' ? 4 : 5)),
-      uniqueActiveOrigins: (() => { const ids = requests.filter(r => r.status !== 'Concluído').map(r => r.origin); return new Set(ids).size === ids.length; })()
+      uniqueActiveOrigins: (() => { const ids = requests.filter(r => r.status !== 'Concluído').map(r => r.origin); return new Set(ids).size === ids.length; })(),
+      singleMutationPath: [typeof renderNegotiation,typeof reserve,typeof release,typeof review].every(value=>value==='undefined')
     }));
-    expect(domainRules).toEqual({ sevenNights: true, checkinWeekday: true, uniqueActiveOrigins: true });
+    expect(domainRules).toEqual({ sevenNights: true, checkinWeekday: true, uniqueActiveOrigins: true, singleMutationPath: true });
 
-    // Original-request priority is visible and blocks the second request.
+    // Options are sorted by request rank first, then deterministically by date/unit/code.
+    const priorityFixture = await page.evaluate(() => {
+      const request = requests.find(r => r.id === 'TR-0088'),candidateStart='2027-04-23';
+      const candidates=weeks.filter(w=>w.start===candidateStart).sort((a,b)=>a.unit-b.unit||a.id.localeCompare(b.id));
+      const saved=candidates.map(w=>({id:w.id,state:w.state,original:w.original})),desired=[...request.desired];
+      candidates.forEach(w=>{w.state='use'});candidates.slice(0,2).forEach(w=>{w.state='available';w.original=false});
+      request.desired=[...desired,candidateStart];renderRequests();
+      return {saved,desired,expected:[...candidates.slice(0,2).map(w=>w.id),target.id]};
+    });
     await page.locator('[data-request="TR-0088"]').click();
+    await expect(page.locator('.exchange-option-rank')).toHaveText(['1º', '1º', '2º']);
+    expect(await page.locator('.exchange-option').evaluateAll(items => items.map(item => item.dataset.optionWeek))).toEqual(priorityFixture.expected);
+    await expect(page.locator('.exchange-option').last().getByRole('button', { name: 'Reservar', exact: true })).toBeDisabled();
+    await page.evaluate(fixture=>{
+      const request=requests.find(r=>r.id==='TR-0088');request.desired=fixture.desired;
+      fixture.saved.forEach(saved=>{const week=getWeek(saved.id);week.state=saved.state;week.original=saved.original});renderExchangeDetail();
+    },priorityFixture);
     await expect(page.locator('.exchange-option-rank')).toHaveText('2º');
-    await expect(page.getByRole('button', { name: 'Reservar', exact: true })).toBeDisabled();
     await page.getByRole('button', { name: 'Voltar aos Pedidos' }).click();
 
     // Observations are recorded in memory with author and the fixed demonstration date.
@@ -342,9 +357,25 @@ const fs = require('node:fs');
     await expect(page.locator('.observation-item')).toContainText('29/09/2026');
     await expect(page.locator('.observation-item')).toContainText('Titular prefere contato no período da tarde.');
 
-    // Reservation requires confirmation and leaves the origin with its owner.
+    // A stale reservation dialog cannot reserve a target whose state changed after opening.
     await page.getByRole('button', { name: 'Reservar', exact: true }).click();
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').target)).toBeNull();
+    await page.evaluate(()=>{target.state='use'});
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar reserva' }).click();
+    await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    expect(await page.evaluate(() => ({target:requests.find(r=>r.id==='TR-0087').target,state:target.state}))).toEqual({target:null,state:'use'});
+    await page.evaluate(()=>{target.state='available';renderExchangeDetail()});
+
+    // Priority is recomputed at confirmation, not trusted from the opened dialog.
+    await page.getByRole('button', { name: 'Reservar', exact: true }).click();
+    await page.evaluate(()=>{requests.push({id:'TR-0001',owner:'Concorrente',origin:'fixture',desired:[target.start],created:'2026-09-01',status:'Aberto',target:null,contact:false,evidence:''})});
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar reserva' }).click();
+    await expect(page.getByText('A prioridade do pedido mudou para esta opção.')).toBeVisible();
+    expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').target)).toBeNull();
+    await page.evaluate(()=>{requests=requests.filter(r=>r.id!=='TR-0001');renderExchangeDetail()});
+
+    // A current reservation succeeds and leaves the origin with its owner.
+    await page.getByRole('button', { name: 'Reservar', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar reserva' }).click();
     const reservedState = await page.evaluate(() => {
       const request = requests.find(r => r.id === 'TR-0087');
@@ -387,6 +418,15 @@ const fs = require('node:fs');
       const request = requests.find(r => r.id === 'TR-0087'), week = getWeek(request.origin);
       week.start = period.start; week.end = period.end; renderExchangeDetail();
     }, originalPeriod);
+
+    // A contact dialog cannot commit after request status/expiration changes.
+    await page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' }).click();
+    await page.evaluate(()=>{const request=requests.find(r=>r.id==='TR-0087');request.status='Prazo vencido';request.expired=true});
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
+    await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(false);
+    await page.evaluate(()=>{const request=requests.find(r=>r.id==='TR-0087');request.status='Em negociação';request.expired=false;renderExchangeDetail()});
+
     await page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(true);
@@ -399,7 +439,29 @@ const fs = require('node:fs');
     await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
     await expect(page.locator('.exchange-stage').nth(2)).toHaveClass(/completed/);
     await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeEnabled();
+    expect(await page.evaluate(() => { const r=requests.find(item=>item.id==='TR-0087');return {evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType,evidenceHistory:r.history.filter(item=>item.kind==='evidence').length} })).toEqual({evidence:'aceite-demo.png',evidenceAt:'2026-09-29',evidenceType:'image/png',evidenceHistory:1});
+
+    // Valid → invalid fully invalidates evidence, progress, history, and review eligibility.
+    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-invalido.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid-again') });
+    await expect(page.locator('.exchange-stage').nth(2)).not.toHaveClass(/completed/);
+    await expect(page.locator('.exchange-stage').nth(2)).toContainText('Pendente');
+    await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeDisabled();
+    expect(await page.evaluate(() => { const r=requests.find(item=>item.id==='TR-0087');return {evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType,evidenceHistory:r.history.filter(item=>item.kind==='evidence'||String(item.text).startsWith('Aceite de WhatsApp validado localmente:')).length} })).toEqual({evidence:'',evidenceAt:'',evidenceType:'',evidenceHistory:0});
+    await expect(page.locator('.request-timeline')).not.toContainText('Aceite de WhatsApp validado localmente');
+
+    // Invalid → valid restores one coherent evidence record.
+    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
+    await expect(page.locator('.exchange-stage').nth(2)).toHaveClass(/completed/);
+    await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeEnabled();
     await page.screenshot({ path: path.join(artifacts, 'negotiation.png'), fullPage: true });
+
+    // A review dialog cannot confirm if its evidence identity changes while open.
+    await page.getByRole('button', { name: 'Revisar e confirmar' }).click();
+    const evidenceSnapshot = await page.evaluate(()=>{const r=requests.find(item=>item.id==='TR-0087'),saved={evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType};r.evidence='evidencia-trocada.pdf';r.evidenceType='application/pdf';return saved});
+    await page.getByRole('button', { name: 'Confirmar troca', exact: true }).click();
+    await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    expect(await page.evaluate(()=>{const r=requests.find(item=>item.id==='TR-0087');return {status:r.status,origin:getWeek(r.origin).state,target:getWeek(r.target).state}})).toEqual({status:'Em negociação',origin:'waiting',target:'reserved'});
+    await page.evaluate(saved=>{const r=requests.find(item=>item.id==='TR-0087');Object.assign(r,saved);renderExchangeDetail()},evidenceSnapshot);
     await page.getByRole('button', { name: 'Revisar e confirmar' }).click();
     await page.screenshot({ path: path.join(artifacts, 'confirmation.png'), animations: 'disabled' });
     await page.getByRole('button', { name: 'Confirmar troca', exact: true }).click();
@@ -447,6 +509,12 @@ const fs = require('node:fs');
     const expiredTargetId = await page.evaluate(() => requests.find(r => r.id === 'TR-0082').target);
     await page.getByRole('button', { name: 'Liberar reserva', exact: true }).click();
     await expect(page.getByRole('dialog')).not.toContainText(/cancelar/i);
+    await page.evaluate(()=>{requests.find(r=>r.id==='TR-0082').target=null});
+    await page.getByRole('dialog').getByRole('button', { name: 'Liberar reserva' }).click();
+    await expect(page.getByText('As condições exibidas mudaram. O detalhe foi atualizado; revise antes de confirmar.')).toBeVisible();
+    expect(await page.evaluate(targetId=>({requestTarget:requests.find(r=>r.id==='TR-0082').target,targetState:getWeek(targetId).state}),expiredTargetId)).toEqual({requestTarget:null,targetState:'reserved'});
+    await page.evaluate(targetId=>{requests.find(r=>r.id==='TR-0082').target=targetId;renderExchangeDetail()},expiredTargetId);
+    await page.getByRole('button', { name: 'Liberar reserva', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Liberar reserva' }).click();
     const released = await page.evaluate(targetId => {
       const request = requests.find(r => r.id === 'TR-0082'), week = getWeek(targetId);
@@ -460,6 +528,13 @@ const fs = require('node:fs');
     await page.locator('[data-nav="dashboard"]').click();
     await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('16');
     await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('2');
+    await page.locator('[data-nav="calendar"]').first().click();
+    await page.evaluate(start=>{calendarDate=start;calendarView='week';renderOperationalGrid()},released.week.start);
+    await expect(page.locator(`.week-item[data-week="${expiredTargetId}"]`)).toHaveClass(/available/);
+    await page.locator('[data-nav="bank"]').first().click();
+    await expect(page.locator(`[data-week="${expiredTargetId}"]`)).toHaveCount(1);
+    await page.locator('[data-nav="requests"]').first().click();
+    await expect(page.locator('tr').filter({has:page.locator('[data-request="TR-0082"]')})).toContainText('opção disponível');
     await page.locator('[data-nav="calendar"]').first().click();
     await page.getByRole('button', { name: 'Novo pedido de troca' }).click();
     expect(await page.locator('select[name="origin"] option').evaluateAll((options, receivedId) => options.some(option => option.value === receivedId), state.target.id)).toBe(false);
@@ -499,7 +574,7 @@ const fs = require('node:fs');
     await page.getByRole('button', { name: 'Voltar à visão normal' }).click();
     await expect(page.locator('.sidebar')).toBeVisible();
     expect(errors).toEqual([]);
-    console.log('PASS: Dashboard e Calendário abrem o Detalhe da troca; prioridade, reserva, 90 dias, evidência local, confirmação, liberação, semana recebida e sincronização com Dashboard/Calendário/Banco/Pedidos validadas; calendário e responsividade sem regressões.');
+    console.log('PASS: opções ordenadas por rank; confirmações rejeitam estado obsoleto; evidência inválida↔válida é coerente; reserva, troca e liberação sincronizam Dashboard/Calendário/Banco/Pedidos; fluxo único e responsividade sem regressões.');
   } finally {
     await browser.close();
   }
