@@ -36,11 +36,16 @@ const fs = require('node:fs');
     await page.keyboard.press('Escape');
     await page.getByLabel('Buscar no painel').fill('TR-0087');
     await page.locator('#dashboard-service .dashboard-row').click();
-    await expect(page.getByRole('heading', { name: /TR-0087/ })).toBeVisible();
-    await page.locator('[data-nav="dashboard"]').click();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeVisible();
+    await expect(page.getByLabel('Metadados da troca')).toContainText('TR-0087');
+    await expect(page.locator('.exchange-stage')).toHaveCount(4);
+    await expect(page.locator('.exchange-stage strong')).toHaveText(['Pedido criado', 'Opção reservada', 'Aceite validado', 'Troca concluída']);
+    expect(await page.locator('.exchange-panels').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(3);
+    await page.getByRole('button', { name: 'Voltar ao Dashboard' }).click();
+    await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
     await page.locator('#dashboard-available .dashboard-panel-foot [data-nav="bank"]').click();
     await expect(page.getByRole('heading', { name: 'Banco de semanas', exact: true })).toBeVisible();
-    await page.locator('[data-nav="dashboard"]').click();
+    await page.locator('#nav [data-nav="dashboard"]').click();
     await page.locator('#dashboard-service .dashboard-panel-foot [data-nav="requests"]').click();
     await expect(page.getByRole('heading', { name: 'Pedidos de troca', exact: true })).toBeVisible();
     await page.locator('[data-nav="dashboard"]').click();
@@ -223,8 +228,10 @@ const fs = require('node:fs');
     await expect(page.locator('#calendar-period-title')).toBeFocused();
     await page.locator('[data-week="SEM-189"]').click();
     await page.getByRole('button', { name: 'Abrir pedido' }).click();
-    await expect(page.getByRole('heading', { name: /TR-0082/ })).toBeVisible();
-    await page.locator('[data-nav="calendar"]').click();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeVisible();
+    await expect(page.getByLabel('Metadados da troca')).toContainText('TR-0082');
+    await page.getByRole('button', { name: 'Voltar ao Calendário' }).click();
+    await expect(page.getByRole('heading', { name: 'Calendário de semanas' })).toBeVisible();
     await page.locator('button[data-calendar-view="month"]').click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await expect(page.locator('#nav .duotone')).toHaveCount(0);
@@ -311,46 +318,164 @@ const fs = require('node:fs');
     await expect(page.getByLabel('Situação', { exact: true })).toHaveValue('blocked');
     await page.getByLabel('Situação', { exact: true }).selectOption('');
     await page.locator('[data-nav="requests"]').first().click();
+
+    // Domain invariants: seven nights, accommodation check-in weekday, and one active request per origin.
+    const domainRules = await page.evaluate(() => ({
+      sevenNights: weeks.every(w => (date(w.end) - date(w.start)) / 86400000 === 7),
+      checkinWeekday: weeks.every(w => date(w.start).getUTCDay() === (getUnit(w).kind === 'Casa' ? 4 : 5)),
+      uniqueActiveOrigins: (() => { const ids = requests.filter(r => r.status !== 'Concluído').map(r => r.origin); return new Set(ids).size === ids.length; })()
+    }));
+    expect(domainRules).toEqual({ sevenNights: true, checkinWeekday: true, uniqueActiveOrigins: true });
+
+    // Original-request priority is visible and blocks the second request.
     await page.locator('[data-request="TR-0088"]').click();
+    await expect(page.locator('.exchange-option-rank')).toHaveText('2º');
     await expect(page.getByRole('button', { name: 'Reservar', exact: true })).toBeDisabled();
-    await page.getByRole('button', { name: 'Voltar aos pedidos' }).click();
+    await page.getByRole('button', { name: 'Voltar aos Pedidos' }).click();
+
+    // Observations are recorded in memory with author and the fixed demonstration date.
     await page.locator('[data-request="TR-0087"]').click();
+    await page.getByRole('button', { name: 'Adicionar observação' }).click();
+    await page.getByRole('textbox', { name: 'Observação', exact: true }).fill('Titular prefere contato no período da tarde.');
+    await page.getByRole('dialog').getByRole('button', { name: 'Adicionar observação', exact: true }).click();
+    await expect(page.locator('.observation-item')).toContainText('Paula Silva');
+    await expect(page.locator('.observation-item')).toContainText('29/09/2026');
+    await expect(page.locator('.observation-item')).toContainText('Titular prefere contato no período da tarde.');
+
+    // Reservation requires confirmation and leaves the origin with its owner.
     await page.getByRole('button', { name: 'Reservar', exact: true }).click();
+    expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').target)).toBeNull();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar reserva' }).click();
+    const reservedState = await page.evaluate(() => {
+      const request = requests.find(r => r.id === 'TR-0087');
+      return { request, origin: getWeek(request.origin), target: getWeek(request.target) };
+    });
+    expect(reservedState.request.status).toBe('Em negociação');
+    expect(reservedState.origin.state).toBe('waiting');
+    expect(reservedState.origin.owner).toBe('João Pedro');
+    expect(reservedState.target.state).toBe('reserved');
+    await expect(page.locator('.destination-panel')).toContainText(reservedState.target.id);
     await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeDisabled();
+
+    // Reservation is synchronized with Dashboard, Calendar, Bank, and Requests.
+    await page.locator('[data-nav="dashboard"]').click();
+    await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('14');
+    await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('1');
+    await page.locator('[data-nav="calendar"]').click();
+    await page.evaluate(start => { calendarDate = start; calendarView = 'week'; renderOperationalGrid(); }, reservedState.target.start);
+    await expect(page.locator(`.week-item[data-week="${reservedState.target.id}"]`)).toHaveClass(/reserved/);
+    await page.evaluate(start => { calendarDate = start; renderOperationalGrid(); }, reservedState.origin.start);
+    await expect(page.locator(`.week-item[data-week="${reservedState.origin.id}"]`)).toHaveClass(/waiting/);
+    await page.locator('[data-nav="bank"]').click();
+    await expect(page.locator(`[data-week="${reservedState.target.id}"]`)).toHaveCount(0);
+    await page.locator('[data-nav="requests"]').click();
+    await expect(page.locator('tr').filter({ has: page.locator('[data-request="TR-0087"]') })).toContainText('Em negociação');
+    await page.locator('[data-request="TR-0087"]').click();
+
+    // The 90-day check rejects a short lead time, then accepts the restored valid origin.
+    const originalPeriod = await page.evaluate(() => {
+      const request = requests.find(r => r.id === 'TR-0087'), week = getWeek(request.origin);
+      const period = { start: week.start, end: week.end };
+      week.start = '2026-11-05'; week.end = '2026-11-12'; renderExchangeDetail();
+      return period;
+    });
     await page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
+    await expect(page.getByText('A semana original não atende à antecedência de 90 dias.')).toBeVisible();
+    expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(false);
+    await page.evaluate(period => {
+      const request = requests.find(r => r.id === 'TR-0087'), week = getWeek(request.origin);
+      week.start = period.start; week.end = period.end; renderExchangeDetail();
+    }, originalPeriod);
+    await page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
+    expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(true);
+
+    // WhatsApp evidence remains local and accepts only the documented file types.
+    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid') });
+    await expect(page.getByText('Selecione uma imagem PNG, JPEG, WebP ou um PDF.')).toBeVisible();
+    expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').evidence)).toBe('');
+    await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeDisabled();
     await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
+    await expect(page.locator('.exchange-stage').nth(2)).toHaveClass(/completed/);
+    await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeEnabled();
     await page.screenshot({ path: path.join(artifacts, 'negotiation.png'), fullPage: true });
     await page.getByRole('button', { name: 'Revisar e confirmar' }).click();
-    await page.screenshot({ path: path.join(artifacts, 'confirmation.png') });
+    await page.screenshot({ path: path.join(artifacts, 'confirmation.png'), animations: 'disabled' });
     await page.getByRole('button', { name: 'Confirmar troca', exact: true }).click();
-    await expect(page.getByText('Troca concluída na demonstração.', { exact: false })).toBeVisible();
-    const state = await page.evaluate(() => ({ origin: getWeek(requests[0].origin), target: getWeek(requests[0].target) }));
+    await expect(page.getByText('Troca concluída na simulação. Estoque atualizado.')).toBeVisible();
+    await expect(page.getByText('Troca concluída · somente leitura')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Adicionar observação' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Liberar reserva' })).toHaveCount(0);
+    await expect(page.getByLabel('Anexar aceite de WhatsApp')).toHaveCount(0);
+    const state = await page.evaluate(() => {
+      const request = requests.find(r => r.id === 'TR-0087');
+      return { request, origin: getWeek(request.origin), target: getWeek(request.target) };
+    });
     expect(state.origin.state).toBe('available');
+    expect(state.origin.traded).toBe(true);
     expect(state.target.state).toBe('use');
     expect(state.target.owner).toBe('João Pedro');
     expect(state.target.original).toBe(false);
+    expect(state.target.received).toBe(true);
+
+    // Confirmation is synchronized with all operational views.
+    await page.locator('#nav [data-nav="dashboard"]').click();
+    await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('15');
+    await expect(page.locator('[data-dashboard-metric="service"]')).toHaveText('2');
+    await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('1');
+    await page.locator('[data-nav="calendar"]').click();
+    await page.evaluate(start => { calendarDate = start; calendarView = 'week'; renderOperationalGrid(); }, state.origin.start);
+    await expect(page.locator(`.week-item[data-week="${state.origin.id}"]`)).toHaveClass(/available/);
+    await page.evaluate(start => { calendarDate = start; renderOperationalGrid(); }, state.target.start);
+    await expect(page.locator(`.week-item[data-week="${state.target.id}"]`)).toHaveClass(/use/);
+    await page.locator(`.week-item[data-week="${state.target.id}"]`).click();
+    await expect(page.getByText('Semana recebida em troca. Não elegível para uma nova troca.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Criar pedido' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
     await page.locator('[data-nav="bank"]').first().click();
     await expect(page.locator(`[data-week="${state.origin.id}"]`)).toHaveCount(1);
     await expect(page.locator(`[data-week="${state.target.id}"]`)).toHaveCount(0);
     await page.locator('[data-nav="requests"]').first().click();
+    await expect(page.locator('tr').filter({ has: page.locator('[data-request="TR-0087"]') })).toContainText('Concluído');
     await page.locator('[data-request="TR-0087"]').click();
-    await page.getByRole('button', { name: 'Voltar aos pedidos' }).click();
+    await page.getByRole('button', { name: 'Voltar aos Pedidos' }).click();
+
+    // Expired reservations require a manual release, never a request cancellation.
     await page.locator('[data-request="TR-0082"]').click();
     await expect(page.getByText('48h encerradas — ação do operador necessária')).toBeVisible();
+    const expiredTargetId = await page.evaluate(() => requests.find(r => r.id === 'TR-0082').target);
     await page.getByRole('button', { name: 'Liberar reserva', exact: true }).click();
+    await expect(page.getByRole('dialog')).not.toContainText(/cancelar/i);
     await page.getByRole('dialog').getByRole('button', { name: 'Liberar reserva' }).click();
-    const released = await page.evaluate(() => requests.find(r => r.id === 'TR-0082'));
-    expect(released.target).toBeNull();
-    expect(released.created).toBe('2026-09-08');
+    const released = await page.evaluate(targetId => {
+      const request = requests.find(r => r.id === 'TR-0082'), week = getWeek(targetId);
+      return { request, week, firstCompatible: compatible(week)[0]?.id };
+    }, expiredTargetId);
+    expect(released.request.target).toBeNull();
+    expect(released.request.created).toBe('2026-09-08');
+    expect(released.request.status).toBe('Aberto');
+    expect(released.week.state).toBe('available');
+    expect(released.firstCompatible).toBe('TR-0082');
+    await page.locator('[data-nav="dashboard"]').click();
+    await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('16');
+    await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('2');
     await page.locator('[data-nav="calendar"]').first().click();
     await page.getByRole('button', { name: 'Novo pedido de troca' }).click();
+    expect(await page.locator('select[name="origin"] option').evaluateAll((options, receivedId) => options.some(option => option.value === receivedId), state.target.id)).toBe(false);
     await page.locator('select[name="origin"]').selectOption({ index: 1 });
     await page.locator('input[name="desired"]').fill('2027-04-05');
     await page.getByRole('button', { name: 'Criar pedido e buscar opções' }).click();
     await expect(page.getByText('Escolha uma quinta-feira (casa) ou sexta-feira (flat).')).toBeVisible();
     await page.locator('input[name="desired"]').fill('2027-04-16');
     await page.getByRole('button', { name: 'Criar pedido e buscar opções' }).click();
-    await expect(page.getByRole('heading', { name: /TR-0089/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeVisible();
+    await expect(page.getByLabel('Metadados da troca')).toContainText('TR-0089');
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    expect(await page.locator('.exchange-panels').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1);
+    expect(await page.locator('.exchange-progress').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1);
+    await page.setViewportSize({ width: 1440, height: 960 });
     await page.locator('[data-nav="calendar"]').first().click();
     await expect(page.locator('#notifications')).toHaveText('');
     await page.setViewportSize({ width: 900, height: 900 });
@@ -374,7 +499,7 @@ const fs = require('node:fs');
     await page.getByRole('button', { name: 'Voltar à visão normal' }).click();
     await expect(page.locator('.sidebar')).toBeVisible();
     expect(errors).toEqual([]);
-    console.log('PASS: Calendário Ano/Mês/Semana com grades vazias navegáveis, foco por teclado, data contextual, navegação completa, sete noites, overflow determinístico, drawer e desktop/tablet/mobile; fluxos legados e console sem regressões.');
+    console.log('PASS: Dashboard e Calendário abrem o Detalhe da troca; prioridade, reserva, 90 dias, evidência local, confirmação, liberação, semana recebida e sincronização com Dashboard/Calendário/Banco/Pedidos validadas; calendário e responsividade sem regressões.');
   } finally {
     await browser.close();
   }
