@@ -59,10 +59,116 @@ const fs = require('node:fs');
     await expect(page.locator('[data-calendar-render="month"]')).toBeVisible();
     await expect(page.locator('#calendar-period-title')).toHaveText('abril de 2027');
     await expect(page.locator('#visible-count')).toHaveText('60 semanas neste período');
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-04-15');
     await expect(page.locator('.month-weekdays span')).toHaveText(['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']);
-    await expect(page.locator('.month-event.continues-before').first()).toBeVisible();
-    await expect(page.locator('.month-overflow').first()).toHaveText(/^\+\d+ itens$/);
     await expect(page.locator('#kind-filter option')).toHaveText(['Todos', 'Casas', 'Flats']);
+
+    // Segmented controls retain the exact context date and restore focus.
+    await page.locator('button[data-calendar-view="year"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.operational-calendar')).toHaveAttribute('data-calendar-view', 'year');
+    await expect(page.locator('button[data-calendar-view="year"]')).toBeFocused();
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-04-15');
+
+    // Year navigation preserves month/day, Today uses the fixed demo date, and empty years remain navigable.
+    await page.getByRole('button', { name: 'Ano anterior' }).click();
+    await expect(page.locator('#calendar-period-title')).toHaveText('2026');
+    expect(await page.evaluate(() => calendarDate)).toBe('2026-04-15');
+    await expect(page.locator('.mini-month')).toHaveCount(12);
+    await expect(page.locator('.calendar-empty-state')).toBeVisible();
+    await page.getByRole('button', { name: 'Hoje', exact: true }).click();
+    expect(await page.evaluate(() => calendarDate)).toBe('2026-09-29');
+    await expect(page.locator('.mini-month')).toHaveCount(12);
+    await page.getByRole('button', { name: 'Próximo ano' }).click();
+    await expect(page.locator('#calendar-period-title')).toHaveText('2027');
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-09-29');
+
+    await page.evaluate(() => { calendarDate = '2027-04-15'; renderOperationalGrid(); });
+    await page.locator('button[data-calendar-view="month"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('button[data-calendar-view="month"]')).toBeFocused();
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-04-15');
+    await page.locator('button[data-calendar-view="week"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('button[data-calendar-view="week"]')).toBeFocused();
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-04-15');
+
+    // Week groups records on their check-in date and keeps each exact seven-night period.
+    await expect(page.locator('[data-calendar-render="week"]')).toBeVisible();
+    await expect(page.locator('.week-day')).toHaveCount(7);
+    const houseCheckinDay = page.locator('.week-day').filter({ has: page.locator('[data-week="SEM-183"]') });
+    await expect(houseCheckinDay.locator('.week-day-header strong')).toHaveText('qui');
+    await expect(houseCheckinDay.locator('.week-day-header span')).toHaveText('15 de abr');
+    await expect(houseCheckinDay.locator('[data-week="SEM-183"]')).toContainText('15 de abr — 22 de abr 2027');
+    const flatCheckinDay = page.locator('.week-day').filter({ has: page.locator('[data-week="SEM-223"]') });
+    await expect(flatCheckinDay.locator('.week-day-header strong')).toHaveText('sex');
+    await expect(flatCheckinDay.locator('.week-day-header span')).toHaveText('16 de abr');
+    await expect(flatCheckinDay.locator('[data-week="SEM-223"]')).toContainText('16 de abr — 23 de abr 2027');
+
+    // Week previous/Today/next navigation keeps all seven days even with no records.
+    await page.getByRole('button', { name: 'Semana anterior' }).click();
+    await expect(page.locator('#calendar-period-title')).toHaveText('5 — 11 abr 2027');
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-04-08');
+    await page.getByRole('button', { name: 'Hoje', exact: true }).click();
+    await expect(page.locator('#calendar-period-title')).toHaveText('28 set — 4 out 2026');
+    expect(await page.evaluate(() => calendarDate)).toBe('2026-09-29');
+    await expect(page.locator('.week-day')).toHaveCount(7);
+    await expect(page.locator('.calendar-empty-state')).toBeVisible();
+    await page.getByRole('button', { name: 'Próxima semana' }).click();
+    await expect(page.locator('#calendar-period-title')).toHaveText('5 — 11 out 2026');
+    expect(await page.evaluate(() => calendarDate)).toBe('2026-10-06');
+    await expect(page.locator('.week-day')).toHaveCount(7);
+
+    // Keyboard drill-down moves focus to an accessible contextual title.
+    await page.evaluate(() => { calendarDate = '2027-04-15'; calendarView = 'year'; renderOperationalGrid(); });
+    await page.locator('.mini-month-header').nth(3).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.operational-calendar')).toHaveAttribute('data-calendar-view', 'month');
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-04-01');
+    await expect(page.locator('#calendar-period-title')).toBeFocused();
+    await page.locator('button[data-calendar-view="year"]').click();
+    await page.locator('[data-calendar-date="2027-04-15"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.operational-calendar')).toHaveAttribute('data-calendar-view', 'week');
+    expect(await page.evaluate(() => calendarDate)).toBe('2027-04-15');
+    await expect(page.locator('#calendar-period-title')).toBeFocused();
+    await page.locator('button[data-calendar-view="month"]').click();
+
+    // A Thursday-to-Thursday item is split 4 + 3 days, with an exclusive checkout boundary.
+    const splitWeek = page.locator('.month-event[data-week="SEM-181"]');
+    await expect(splitWeek).toHaveCount(2);
+    await expect(splitWeek.nth(0)).toHaveClass(/continues-after/);
+    await expect(splitWeek.nth(0)).not.toHaveClass(/continues-before/);
+    await expect(splitWeek.nth(0)).toHaveAttribute('data-period-start', '2027-04-01');
+    await expect(splitWeek.nth(0)).toHaveAttribute('data-period-end', '2027-04-08');
+    await expect(splitWeek.nth(0)).toHaveAttribute('data-segment-start', '2027-04-01');
+    await expect(splitWeek.nth(0)).toHaveAttribute('data-segment-end', '2027-04-05');
+    await expect(splitWeek.nth(1)).toHaveClass(/continues-before/);
+    await expect(splitWeek.nth(1)).not.toHaveClass(/continues-after/);
+    await expect(splitWeek.nth(1)).toHaveAttribute('data-segment-start', '2027-04-05');
+    await expect(splitWeek.nth(1)).toHaveAttribute('data-segment-end', '2027-04-08');
+    await expect(splitWeek.nth(0)).toHaveAttribute('title', /01 de abr — 08 de abr 2027/);
+    expect(await splitWeek.evaluateAll(segments => segments.reduce((total, segment) => total + (Date.parse(`${segment.dataset.segmentEnd}T12:00:00Z`) - Date.parse(`${segment.dataset.segmentStart}T12:00:00Z`)) / 86400000, 0))).toBe(7);
+
+    // Overflow count and ordering are deterministic and survive a mode rerender.
+    await expect(page.locator('.month-overflow')).toHaveText(['+9 itens', '+21 itens', '+21 itens', '+21 itens', '+21 itens']);
+    const expectedOverflowOrder = ['SEM-196', 'SEM-201', 'SEM-206', 'SEM-211', 'SEM-216', 'SEM-221', 'SEM-226', 'SEM-231', 'SEM-236'];
+    await page.locator('.month-overflow').first().click();
+    expect(await page.locator('.calendar-overflow-item').evaluateAll(items => items.map(item => item.dataset.week))).toEqual(expectedOverflowOrder);
+    await page.keyboard.press('Escape');
+    await page.locator('button[data-calendar-view="year"]').click();
+    await page.locator('button[data-calendar-view="month"]').click();
+    await expect(page.locator('.month-overflow').first()).toHaveText('+9 itens');
+    await page.locator('.month-overflow').first().click();
+    expect(await page.locator('.calendar-overflow-item').evaluateAll(items => items.map(item => item.dataset.week))).toEqual(expectedOverflowOrder);
+    await page.locator('.calendar-overflow-item').first().click();
+    await expect(page.getByRole('dialog')).toContainText(/7 noites/);
+    await page.keyboard.press('Escape');
+    await page.locator('.month-event').first().click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    // Filters survive all modes; their empty message coexists with each navigable calendar structure.
     await page.getByLabel('Tipo de acomodação').selectOption({ label: 'Casas' });
     await expect(page.locator('#visible-count')).toHaveText('40 semanas neste período');
     await page.getByLabel('Tipologia', { exact: true }).selectOption('B');
@@ -78,41 +184,43 @@ const fs = require('node:fs');
     await expect(page.getByLabel('Buscar unidade, titular ou semana')).toHaveValue('Casa');
     await page.getByLabel('Buscar unidade, titular ou semana').fill('impossivel');
     await expect(page.getByText('Nenhuma semana corresponde aos filtros neste período.')).toBeVisible();
+    await expect(page.locator('.mini-month')).toHaveCount(12);
+    await page.locator('button[data-calendar-view="month"]').click();
+    await expect(page.locator('.calendar-empty-state')).toBeVisible();
+    await expect(page.locator('[data-calendar-render="month"]')).toBeVisible();
+    await expect(page.locator('.month-week')).toHaveCount(5);
+    await page.locator('button[data-calendar-view="week"]').click();
+    await expect(page.locator('.calendar-empty-state')).toBeVisible();
+    await expect(page.locator('[data-calendar-render="week"]')).toBeVisible();
+    await expect(page.locator('.week-day')).toHaveCount(7);
+    await expect(page.getByLabel('Tipo de acomodação')).toHaveValue('Casa');
+    await expect(page.getByLabel('Tipologia', { exact: true })).toHaveValue('B');
+    await expect(page.getByLabel('Situação', { exact: true })).toHaveValue('available');
+    await expect(page.getByLabel('Buscar unidade, titular ou semana')).toHaveValue('impossivel');
     await page.getByLabel('Buscar unidade, titular ou semana').fill('');
     await page.getByLabel('Tipo de acomodação').selectOption('');
     await page.getByLabel('Tipologia', { exact: true }).selectOption('');
     await page.getByLabel('Situação', { exact: true }).selectOption('');
+    await page.locator('button[data-calendar-view="year"]').click();
     await expect(page.locator('#visible-count')).toHaveText('60 semanas neste período');
     await page.screenshot({ path: path.join(artifacts, 'calendar-year.png'), fullPage: true, animations: 'disabled' });
-    await page.locator('.mini-month-header').nth(3).click();
-    await expect(page.locator('.operational-calendar')).toHaveAttribute('data-calendar-view', 'month');
-    await page.locator('button[data-calendar-view="year"]').click();
-    await page.locator('.year-day.has-items').first().click();
-    await expect(page.locator('.operational-calendar')).toHaveAttribute('data-calendar-view', 'week');
-    await expect(page.locator('[data-calendar-render="week"]')).toBeVisible();
-    await expect(page.locator('.week-day')).toHaveCount(7);
-    await expect(page.locator('.week-item').first()).toContainText(/—/);
+    await page.locator('[data-calendar-date="2027-04-15"]').click();
     await page.screenshot({ path: path.join(artifacts, 'calendar-week.png'), fullPage: true, animations: 'disabled' });
     await page.locator('button[data-calendar-view="month"]').click();
     await page.getByRole('button', { name: 'Mês anterior' }).click();
     await expect(page.locator('#calendar-period-title')).toHaveText('março de 2027');
     await expect(page.getByText('Nenhuma semana corresponde aos filtros neste período.')).toBeVisible();
+    await expect(page.locator('[data-calendar-render="month"]')).toBeVisible();
+    await expect(page.locator('.month-event')).toHaveCount(0);
     await page.getByRole('button', { name: 'Próximo mês' }).click();
     await expect(page.locator('#calendar-period-title')).toHaveText('abril de 2027');
     await page.getByRole('button', { name: 'Hoje', exact: true }).click();
     await expect(page.locator('#calendar-period-title')).toHaveText('setembro de 2026');
-    for (let i = 0; i < 7; i += 1) await page.getByRole('button', { name: 'Próximo mês' }).click();
-    await expect(page.locator('#calendar-period-title')).toHaveText('abril de 2027');
-    await page.locator('.month-overflow').first().click();
-    await expect(page.getByRole('heading', { name: 'Mais itens', exact: true })).toBeVisible();
-    await page.locator('.calendar-overflow-item').first().click();
-    await expect(page.getByRole('dialog')).toContainText(/7 noites/);
-    await page.keyboard.press('Escape');
-    await page.locator('.month-event').first().click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-calendar-render="month"]')).toBeVisible();
+    await page.evaluate(() => { calendarDate = '2027-04-15'; renderOperationalGrid(); });
     await page.locator('[data-calendar-date="2027-04-22"]').click();
     await expect(page.locator('.operational-calendar')).toHaveAttribute('data-calendar-view', 'week');
+    await expect(page.locator('#calendar-period-title')).toBeFocused();
     await page.locator('[data-week="SEM-189"]').click();
     await page.getByRole('button', { name: 'Abrir pedido' }).click();
     await expect(page.getByRole('heading', { name: /TR-0082/ })).toBeVisible();
@@ -244,7 +352,7 @@ const fs = require('node:fs');
     await page.getByRole('button', { name: 'Criar pedido e buscar opções' }).click();
     await expect(page.getByRole('heading', { name: /TR-0089/ })).toBeVisible();
     await page.locator('[data-nav="calendar"]').first().click();
-    await page.waitForTimeout(4600);
+    await expect(page.locator('#notifications')).toHaveText('');
     await page.setViewportSize({ width: 900, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.setViewportSize({ width: 390, height: 844 });
@@ -266,7 +374,7 @@ const fs = require('node:fs');
     await page.getByRole('button', { name: 'Voltar à visão normal' }).click();
     await expect(page.locator('.sidebar')).toBeVisible();
     expect(errors).toEqual([]);
-    console.log('PASS: Dashboard Ownerinc, calendário Ano/Mês/Semana, navegação, filtros persistentes, overflow, drawer, negociação, modo ampliado, desktop/tablet/mobile e console.');
+    console.log('PASS: Calendário Ano/Mês/Semana com grades vazias navegáveis, foco por teclado, data contextual, navegação completa, sete noites, overflow determinístico, drawer e desktop/tablet/mobile; fluxos legados e console sem regressões.');
   } finally {
     await browser.close();
   }

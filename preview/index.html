@@ -109,7 +109,7 @@ main{margin-left:252px}.topbar{background:#fff}.content{max-width:1720px}
 .operational-calendar{overflow:hidden}
 .calendar-commandbar{display:grid;grid-template-columns:auto minmax(180px,1fr) auto auto;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
 .calendar-navigation{display:flex;align-items:center;gap:8px}.calendar-navigation button{white-space:nowrap}
-.calendar-period-title{font-size:22px;text-align:center;min-width:0}
+.calendar-period-title{font-size:22px;text-align:center;min-width:0}.calendar-period-title:focus-visible{outline:3px solid #85afff;outline-offset:3px;border-radius:4px}
 .calendar-segmented{display:flex;border:1px solid #d9d7d1;border-radius:7px;overflow:hidden;background:#fff}
 .calendar-segmented button{min-height:40px;border:0;border-right:1px solid #d9d7d1;border-radius:0;padding:8px 15px}
 .calendar-segmented button:last-child{border-right:0}.calendar-segmented button[aria-pressed=true]{background:#1d1d1b;color:#fff}
@@ -117,7 +117,7 @@ main{margin-left:252px}.topbar{background:#fff}.content{max-width:1720px}
 .calendar-filters .search{min-width:0}.calendar-filters select,.calendar-filters input{width:100%}
 .calendar-context{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted)}
 .calendar-stage{overflow:auto;background:#fff;min-height:420px;max-height:690px}
-.calendar-empty{min-height:360px;display:grid;place-items:center;padding:32px;text-align:center;color:var(--muted)}
+.calendar-empty-state{padding:12px 18px;border-bottom:1px solid var(--line);background:#f7f6f2;color:var(--muted);text-align:center;font-size:14px}
 .calendar-focus .operational-calendar{height:100%}.calendar-focus .calendar-stage{flex:1;max-height:none;min-height:0}.calendar-focus .calendar-commandbar,.calendar-focus .calendar-filters,.calendar-focus .calendar-context{flex-shrink:0}
 .calendar-focus .calendar-commandbar{grid-template-columns:auto auto minmax(180px,1fr) auto auto}.calendar-focus .calendar-focus-title{display:flex;margin:0;font-size:18px}
 .year-grid{display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:1px;background:var(--line)}
@@ -276,7 +276,7 @@ function renderOperationalCalendar(){
       <header class="calendar-commandbar">
         <div class="calendar-focus-title">${icon('calendar')} Calendário de semanas</div>
         <div class="calendar-navigation"><button class="square" data-action="calendar-prev" aria-label="Período anterior">${icon('left')}</button><button data-action="calendar-today">Hoje</button><button class="square" data-action="calendar-next" aria-label="Próximo período">${icon('right')}</button></div>
-        <h2 class="calendar-period-title" id="calendar-period-title" aria-live="polite"></h2>
+        <h2 class="calendar-period-title" id="calendar-period-title" tabindex="-1" aria-live="polite"></h2>
         <div class="calendar-segmented" role="group" aria-label="Visualização do calendário">${[['year','Ano'],['month','Mês'],['week','Semana']].map(([mode,label])=>`<button data-calendar-view="${mode}" aria-pressed="${calendarView===mode}">${label}</button>`).join('')}</div>
         <button class="focus-toggle" data-calendar-focus aria-pressed="${calendarFocus}">${icon(calendarFocus?'collapse':'expand')} ${calendarFocus?'Voltar à visão normal':'Ampliar calendário'}</button>
       </header>
@@ -312,9 +312,9 @@ function renderMonthCalendar(records){
   const monthRecords=records.filter(w=>w.start<monthEnd&&w.end>monthStart);calendarOverflow={};
   const weekdays=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];let rows='';
   for(let rowStart=gridStart;rowStart<gridEnd;rowStart=add(rowStart,7)){
-    const rowEnd=add(rowStart,7),rowItems=records.filter(w=>w.start<rowEnd&&w.end>rowStart),shown=rowItems.slice(0,3),hidden=rowItems.slice(3),key=rowStart;
+    const rowEnd=add(rowStart,7),rowItems=monthRecords.filter(w=>w.start<rowEnd&&w.end>rowStart),shown=rowItems.slice(0,3),hidden=rowItems.slice(3),key=rowStart;
     const days=Array.from({length:7},(_,index)=>{const current=add(rowStart,index),outside=date(current).getUTCMonth()!==calendarMonth;return `<div class="month-day ${outside?'outside':''}" style="grid-column:${index+1};grid-row:1/-1"><button class="month-day-number ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="Abrir semana de ${full(current)}">${date(current).getUTCDate()}</button></div>`}).join('');
-    const items=shown.map((w,index)=>{const segmentStart=w.start>rowStart?w.start:rowStart,segmentEnd=w.end<rowEnd?w.end:rowEnd,startColumn=Math.round((date(segmentStart)-date(rowStart))/86400000)+1,span=Math.max(1,Math.round((date(segmentEnd)-date(segmentStart))/86400000)),u=getUnit(w),label=`${u.name} · ${labels[w.state]}`;return `<button class="month-event ${w.state} ${w.start<rowStart?'continues-before':''} ${w.end>rowEnd?'continues-after':''}" data-week="${w.id}" style="grid-column:${startColumn}/span ${span};grid-row:${index+2}" title="${escapeHtml(`${label} · ${range(w)}`)}" aria-label="${escapeHtml(`${label}, ${range(w)}, ${calendarPerson(w)}`)}"><span class="month-event-text">${escapeHtml(label)}</span></button>`}).join('');
+    const items=shown.map((w,index)=>{const segmentStart=w.start>rowStart?w.start:rowStart,segmentEnd=w.end<rowEnd?w.end:rowEnd,startColumn=Math.round((date(segmentStart)-date(rowStart))/86400000)+1,span=Math.max(1,Math.round((date(segmentEnd)-date(segmentStart))/86400000)),u=getUnit(w),label=`${u.name} · ${labels[w.state]}`;return `<button class="month-event ${w.state} ${w.start<rowStart?'continues-before':''} ${w.end>rowEnd?'continues-after':''}" data-week="${w.id}" data-period-start="${w.start}" data-period-end="${w.end}" data-segment-start="${segmentStart}" data-segment-end="${segmentEnd}" style="grid-column:${startColumn}/span ${span};grid-row:${index+2}" title="${escapeHtml(`${label} · ${range(w)}`)}" aria-label="${escapeHtml(`${label}, ${range(w)}, ${calendarPerson(w)}`)}"><span class="month-event-text">${escapeHtml(label)}</span></button>`}).join('');
     if(hidden.length)calendarOverflow[key]={title:`${short(rowStart)} — ${short(add(rowEnd,-1))}`,ids:hidden.map(w=>w.id)};
     rows+=`<div class="month-week">${days}${items}${hidden.length?`<button class="month-overflow" data-calendar-overflow="${key}" aria-label="Mostrar mais ${hidden.length} itens de ${short(rowStart)} a ${short(add(rowEnd,-1))}">+${hidden.length} itens</button>`:''}</div>`;
   }
@@ -332,11 +332,15 @@ function renderOperationalGrid(){
   $('#calendar-period-title').textContent=calendarPeriodTitle();
   document.querySelectorAll('button[data-calendar-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.calendarView===calendarView)));
   const unit=result.count===1?'semana':'semanas';$('#visible-count').textContent=`${result.count} ${unit} neste período`;
-  $('#calendar-grid').innerHTML=result.count?result.html:`<div class="calendar-empty">Nenhuma semana corresponde aos filtros neste período.</div>`;
+  const empty=result.count?'':'<div class="calendar-empty-state" role="status">Nenhuma semana corresponde aos filtros neste período.</div>';
+  $('#calendar-grid').innerHTML=empty+result.html;
   const modeLabel={year:'Ano',month:'Mês',week:'Semana'}[calendarView];$('[data-action=calendar-prev]').setAttribute('aria-label',`${modeLabel} anterior`);$('[data-action=calendar-next]').setAttribute('aria-label',`Próxim${calendarView==='week'?'a':'o'} ${modeLabel.toLocaleLowerCase('pt-BR')}`);
 }
-function setCalendarView(mode,nextDate=calendarDate){
-  if(!calendarModes.includes(mode))return;calendarView=mode;calendarDate=nextDate;renderOperationalCalendar();
+function setCalendarView(mode,nextDate=calendarDate,focusTarget='control'){
+  if(!calendarModes.includes(mode))return;
+  calendarView=mode;calendarDate=nextDate;renderOperationalGrid();
+  const target=focusTarget==='context'?$('#calendar-period-title'):$(`button[data-calendar-view="${mode}"]`);
+  target?.focus({preventScroll:true});
 }
 function moveCalendar(direction){
   const d=date(calendarDate);
@@ -416,9 +420,9 @@ function release(){const r=requests.find(r=>r.id===activeRequest);openLayer(`<h2
 function review(){const r=requests.find(r=>r.id===activeRequest),o=getWeek(r.origin),t=getWeek(r.target);if(!r.contact||!r.evidence||t?.state!=='reserved')return;openLayer(`<h2 id="layer-title">Confirmar troca de semanas?</h2><p>Revise a movimentação para <strong>${escapeHtml(r.owner)}</strong>.</p><div class="notice"><strong>Entra no banco</strong><br>${getUnit(o).name} · ${range(o)}<br><br><strong>Passa para ${escapeHtml(r.owner)}</strong><br>${getUnit(t).name} · ${range(t)}</div><p>O aceite de WhatsApp está anexado. A semana recebida não poderá ser trocada novamente.</p><div class="actions"><button data-action="close">Voltar à revisão</button><button class="primary" data-action="confirm">${icon('check')} Confirmar troca</button></div>`,true)}
 document.addEventListener('click',e=>{
   const button=e.target.closest('button');if(!button||view!=='calendar')return;
-  if(button.dataset.calendarView){e.stopImmediatePropagation();setCalendarView(button.dataset.calendarView);return}
-  if(button.dataset.calendarMonth){e.stopImmediatePropagation();setCalendarView('month',button.dataset.calendarMonth);return}
-  if(button.dataset.calendarDrill&&button.dataset.calendarDate){e.stopImmediatePropagation();setCalendarView(button.dataset.calendarDrill,button.dataset.calendarDate);return}
+  if(button.dataset.calendarView){e.stopImmediatePropagation();setCalendarView(button.dataset.calendarView,calendarDate,'control');return}
+  if(button.dataset.calendarMonth){e.stopImmediatePropagation();setCalendarView('month',button.dataset.calendarMonth,'context');return}
+  if(button.dataset.calendarDrill&&button.dataset.calendarDate){e.stopImmediatePropagation();setCalendarView(button.dataset.calendarDrill,button.dataset.calendarDate,'context');return}
   if(button.dataset.calendarOverflow){e.stopImmediatePropagation();openCalendarOverflow(button.dataset.calendarOverflow);return}
   const action=button.dataset.action;
   if(action==='calendar-prev'||action==='calendar-next'){e.stopImmediatePropagation();moveCalendar(action==='calendar-next'?1:-1);return}
