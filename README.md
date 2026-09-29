@@ -71,13 +71,19 @@ Esta prévia simula o fluxo e não altera direitos de uso reais.
   `prefers-reduced-motion`.
 - Situações operacionais usam texto, ícone ou forma além da cor.
 
-## Validação
+## Instalação e validação
 
-Com as dependências do workspace instaladas, execute exatamente a partir de
-`C:/Ownerinc/projects/Flexi-V1`:
+A prévia não precisa de instalação para ser aberta. Para executar a suíte de
+validação em um clone novo do repositório, instale as dependências locais:
 
 ```sh
-node scripts/check-preview.cjs
+npm ci
+```
+
+Depois, na raiz do repositório, execute:
+
+```sh
+npm run verify
 ```
 
 O check abre a prévia por `file://`, exercita regras e interações com Playwright
