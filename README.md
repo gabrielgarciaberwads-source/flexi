@@ -1,75 +1,94 @@
-# Flexi — prévia de Gestão de Troca de Semanas
+# Flexi — Gestão de trocas
 
-Protótipo navegável para validar o calendário e o fluxo de troca com o pós-vendas.
-Abra `preview/index.html` diretamente no navegador ou use o visual companion.
-Não exige instalação, API, credenciais ou acesso a dados reais.
+Prévia navegável do fluxo operacional de troca de semanas. A aplicação usa a
+Ownerinc como identidade principal do shell e identifica o módulo como
+`Flexi · Gestão de trocas`.
 
-## Escopo
+Abra `preview/index.html` diretamente no navegador. A prévia é formada por
+HTML, CSS e JavaScript locais, não usa API ou servidor e funciona por uma URL
+`file://`.
 
-- Calendário por unidade, com datas reais, filtros e drawer de semana.
-- Banco de semanas e pedidos com prioridade pela data do pedido original.
-- Banco em calendário pesquisável: somente semanas efetivamente disponíveis,
-  busca por unidade/titular de origem/código, filtros Todos/Casas/Flats e tipologia,
-  navegação mensal e ampliação. Filtros independentes do calendário geral.
-  O seletor **Unidade** identifica tipo e número (Casa 01, Flat 01 etc.) e combina
-  com tipologia, pesquisa e mês. A lista acompanha Todos/Casas/Flats e limpa uma
-  seleção incompatível ao mudar o tipo. Unidades sem estoque continuam na lista;
-  selecioná-las exibe o estado vazio, sem incluir semanas indisponíveis.
-  Cada bloco mostra o período e a quantidade de pedidos compatíveis; clicar abre
-  o drawer com origem, histórico e fila. Reservas saem do banco, e a confirmação
-  faz a origem entrar e o destino sair também nesta visualização.
-- Novo pedido com semana original e alternativas exatas.
-- Reserva, contato, evidência local de WhatsApp e revisão da troca.
-- Confirmação simulada: semana original entra no banco e destino passa ao titular.
-- Liberação manual de uma reserva vencida; pedido preserva prioridade.
+## Produto implementado
 
-Todos os nomes e registros são fictícios. O estado é mantido apenas em memória;
-recarregar a página reinicia a demonstração. Arquivos selecionados não são enviados.
-O relógio da demonstração é fixo em 29/09/2026 às 12h (UTC).
-
-## Validação
-
-### Revisão visual: leitura confortável
-
-- Filtro de acomodação: **Todos / Casas / Flats**.
-- Texto-base de 16 px, status do calendário de 16 px, linhas de 108 px e
-  controles de pelo menos 44 px (navegação mensal: 42 px).
-- Calendário com largura mínima de 1600 px e rolagem horizontal própria;
-  unidade e cabeçalho permanecem fixos para preservar o contexto.
-- Drawer de 560 px, textos e tabelas ampliados.
-- **Ampliar calendário** dedica a janela à grade, filtros e navegação do período.
-  Oculta sidebar, cabeçalho e indicadores, preservando filtros, período e rolagem
-  interna. **Voltar à visão normal** ou Esc restaura a visão anterior. Se houver
-  drawer aberto, o primeiro Esc fecha apenas o drawer. Ao navegar para outra
-  tela, a navegação principal reaparece.
-- **Lucide Linear é o padrão aprovado** para os ícones principais.
-- Botão **Ícones e movimento** na sidebar permite comparar Phosphor Duotone
-  e Lucide Linear nos quatro ícones principais. Seleção vale só nesta sessão.
-- Movimento CSS: drawer 220 ms, modal/toast 180 ms, resposta de cor 140 ms.
-  `prefers-reduced-motion` e desativação manual são respeitados.
-
-Referências: [beUI](https://beui.dev/docs/motion-patterns) para princípios de
-movimento e [Shadcn Dashboard](https://shadcndashboard.com/templates) para
-hierarquia de painéis (sem código ou assets desses templates).
-SVGs de [Lucide](https://github.com/lucide-icons/lucide) (ISC) e
-[Phosphor](https://github.com/phosphor-icons/core) (MIT) incorporados localmente;
-avisos de licença preservados no HTML. Nenhum pacote ou CDN é necessário.
-
-`node scripts/check-preview.cjs` executa as verificações de interação com Playwright
-disponível no workspace. Não exige servidor externo. Capturas ficam em `artifacts/`.
+- **Dashboard inicial:** quatro indicadores derivados do estado atual, busca e
+  três listas operacionais — semanas disponíveis, pedidos em atendimento e
+  pedidos sem atendimento. As linhas abrem a semana ou o pedido, e os atalhos
+  levam ao Banco de semanas e a Pedidos.
+- **Calendário:** abre em **Mês** e também oferece **Ano** e **Semana**. Mantém
+  data de contexto, pesquisa e filtros ao trocar de visualização. Ano apresenta
+  doze mini-calendários com marcadores; Mês usa grade de segunda a domingo,
+  períodos contínuos e listas de overflow; Semana organiza os registros por
+  data de entrada, sem régua de horários. Os itens abrem o mesmo drawer de
+  semana, e o calendário pode ocupar uma visão ampliada.
+- **Detalhe da troca:** mostra metadados, origem, destino, consequência da
+  transferência e quatro etapas: Pedido criado, Opção reservada, Aceite
+  validado e Troca concluída. As ações disponíveis dependem do estado e cobrem
+  reserva, contato, comprovante local, revisão, confirmação, liberação manual e
+  observações em memória. Pedidos concluídos ficam somente para leitura.
+- **Demais acessos:** Banco de semanas, Pedidos, Proprietários e Novo pedido
+  continuam navegáveis. Seus layouts não fizeram parte deste redesign.
 
 ## Regras preservadas
 
-Uma troca por semana original, sete noites, casas quinta–quinta e flats sexta–sexta.
-Sem restrições de tipologia ou entre anos. Pedidos não disponibilizam suas origens.
-Reservas vencidas ficam retidas até ação manual. Prioridade pela solicitação original.
-Antecedência de 90 dias da origem verificada no contato; aceite por arquivo de WhatsApp.
+- Cada período tem sete noites: casas de quinta a quinta e flats de sexta a
+  sexta.
+- Cada semana original pode sustentar apenas um pedido ativo.
+- A prioridade é definida pela data da solicitação original; reservar ou liberar
+  uma opção não reinicia essa prioridade.
+- A semana de origem permanece com o proprietário e fora do banco até a
+  confirmação da troca.
+- O registro de contato verifica a antecedência mínima de 90 dias da semana de
+  origem.
+- O aceite de WhatsApp aceita PNG, JPEG, WebP ou PDF e permanece somente no
+  navegador; nenhum arquivo é enviado.
+- Uma reserva vencida continua retida até a liberação manual. A liberação
+  devolve a opção ao banco e mantém o pedido aberto.
+- Uma semana recebida em troca não pode originar outra troca.
+- Na confirmação, a origem entra no banco e o destino sai do banco, passa ao
+  proprietário e é marcado como recebido em troca.
 
-## Decisões ainda abertas
+Dashboard, Calendário, Banco de semanas e Pedidos derivam dos mesmos dados em
+memória e refletem essas mutações durante a sessão.
 
-- Permissão para aplicar/remover bloqueios por inadimplência.
-- Confirmação se o limite de 90 dias for ultrapassado depois do contato.
-- Procedimento para desfazer troca cuja origem já foi repassada.
+## Dados da demonstração
 
-Essas exceções não são executadas neste protótipo. Importação, login, persistência,
-auditoria imutável, concorrência e transação real serão tratados na implementação.
+Nomes, semanas, pedidos e registros são fictícios. Todo o estado existe apenas
+em memória; recarregar a página reinicia a demonstração. O relógio da prévia é
+fixo em 29/09/2026 às 12h (UTC), e o calendário inicia no conjunto fictício de
+abril de 2027.
+
+Esta prévia simula o fluxo e não altera direitos de uso reais.
+
+## Responsividade e acessibilidade
+
+- No desktop, a navegação lateral fica expandida; no tablet, compacta; no
+  mobile, abre como drawer.
+- Indicadores e colunas do Dashboard, painéis da troca e progresso se reorganizam
+  para tablet e mobile. Regiões densas do calendário usam rolagem interna quando
+  necessário, sem criar rolagem horizontal na página.
+- A interface preserva navegação por teclado, foco visível, fechamento e retorno
+  de foco com `Escape`, bloqueio do conteúdo atrás de drawers/modais e suporte a
+  `prefers-reduced-motion`.
+- Situações operacionais usam texto, ícone ou forma além da cor.
+
+## Validação
+
+Com as dependências do workspace instaladas, execute exatamente a partir de
+`C:/Ownerinc/projects/Flexi-V1`:
+
+```sh
+node scripts/check-preview.cjs
+```
+
+O check abre a prévia por `file://`, exercita regras e interações com Playwright
+e atualiza as capturas em `artifacts/` para revisão visual.
+
+## Fora do escopo atual
+
+As seguintes telas permanecem adiadas:
+
+- **Detalhe do proprietário**;
+- **Importação via Excel**.
+
+Também não fazem parte desta prévia backend, autenticação, persistência, exportação,
+concorrência/transações reais ou fotografias reais dos imóveis.
