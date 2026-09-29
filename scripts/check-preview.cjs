@@ -40,6 +40,27 @@ const accessibilityRoleExists = async (session, role, nameFragment) => {
   const { nodes } = await session.send('Accessibility.getFullAXTree');
   return nodes.some(node => !node.ignored && node.role?.value === role && node.name?.value?.includes(nameFragment));
 };
+const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').evaluate((container, name) => {
+  const input = container.querySelector('#evidence'), fileName = container.querySelector('#file-name');
+  const containerRect = container.getBoundingClientRect(), inputRect = input.getBoundingClientRect(), fileNameRect = fileName.getBoundingClientRect();
+  const inside = rect => rect.left >= containerRect.left - .5 && rect.right <= containerRect.right + .5;
+  const style = getComputedStyle(container), fileNameStyle = getComputedStyle(fileName);
+  return {
+    display: style.display,
+    fragments: container.getClientRects().length,
+    borderStyles: [style.borderTopStyle, style.borderRightStyle, style.borderBottomStyle, style.borderLeftStyle],
+    borderWidths: [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth],
+    inputInside: inside(inputRect),
+    fileNameInside: inside(fileNameRect),
+    containerOverflow: container.scrollWidth > container.clientWidth + 1,
+    inputOverflow: input.scrollWidth > input.clientWidth + 1,
+    fileNameOverflow: fileName.scrollWidth > fileName.clientWidth + 1,
+    fileNameText: fileName.textContent,
+    fileNameTitle: fileName.title,
+    overflowWrap: fileNameStyle.overflowWrap,
+    expectedName: name
+  };
+}, expectedName);
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
@@ -677,11 +698,42 @@ const accessibilityRoleExists = async (session, role, nameFragment) => {
     expect(await page.evaluate(() => { const r=requests.find(item=>item.id==='TR-0087');return {evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType,evidenceHistory:r.history.filter(item=>item.kind==='evidence'||String(item.text).startsWith('Aceite de WhatsApp validado localmente:')).length} })).toEqual({evidence:'',evidenceAt:'',evidenceType:'',evidenceHistory:0});
     await expect(page.locator('.request-timeline')).not.toContainText('Aceite de WhatsApp validado localmente');
 
-    // Invalid → valid restores one coherent evidence record.
-    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
+    // Invalid → valid restores one coherent evidence record. A long filename stays inside one continuous field at every breakpoint.
+    const longEvidenceName = `aceite-${'comprovante'.repeat(18)}.png`;
+    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: longEvidenceName, mimeType: 'image/png', buffer: Buffer.from('preview-only') });
     await expect(page.locator('.exchange-stage').nth(2)).toHaveClass(/completed/);
     await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeEnabled();
     await expect(page.locator('#notifications')).toHaveText('');
+    await expect(page.locator('#file-name')).toHaveText(longEvidenceName);
+    await expect(page.locator('#file-name')).toHaveAttribute('title', longEvidenceName);
+    for (const breakpoint of [
+      { name: 'desktop', width: 1440, height: 960 },
+      { name: 'tablet', width: 900, height: 900 },
+      { name: 'mobile', width: 390, height: 844 }
+    ]) {
+      await page.setViewportSize({ width: breakpoint.width, height: breakpoint.height });
+      const geometry = await evidenceFieldGeometry(page, longEvidenceName);
+      expect(geometry.display).toBe('grid');
+      expect(geometry.fragments).toBe(1);
+      expect(geometry.borderStyles).toEqual(['dashed', 'dashed', 'dashed', 'dashed']);
+      expect(geometry.borderWidths).toEqual(['1px', '1px', '1px', '1px']);
+      expect(geometry.inputInside).toBe(true);
+      expect(geometry.fileNameInside).toBe(true);
+      expect(geometry.containerOverflow).toBe(false);
+      expect(geometry.inputOverflow).toBe(false);
+      expect(geometry.fileNameOverflow).toBe(false);
+      expect(geometry.fileNameText).toBe(geometry.expectedName);
+      expect(geometry.fileNameTitle).toBe(geometry.expectedName);
+      expect(geometry.overflowWrap).toBe('anywhere');
+      expect(await noHorizontalOverflow(page)).toBe(true);
+      await prepareScreenshot(page);
+      await page.screenshot({ path: path.join(artifacts, `exchange-evidence-${breakpoint.name}.png`), fullPage: true, animations: 'disabled' });
+    }
+    await page.setViewportSize({ width: 1440, height: 960 });
+    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
+    await expect(page.locator('#file-name')).toHaveText('aceite-demo.png');
+    await expect(page.locator('#file-name')).toHaveAttribute('title', 'aceite-demo.png');
+    expect(await page.evaluate(() => { const r=requests.find(item=>item.id==='TR-0087');return {evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType,evidenceHistory:r.history.filter(item=>item.kind==='evidence').length} })).toEqual({evidence:'aceite-demo.png',evidenceAt:'2026-09-29',evidenceType:'image/png',evidenceHistory:1});
     await prepareScreenshot(page);
     await page.screenshot({ path: path.join(artifacts, 'negotiation.png'), fullPage: true, animations: 'disabled' });
     await page.screenshot({ path: path.join(artifacts, 'exchange-detail-desktop.png'), fullPage: true, animations: 'disabled' });
@@ -829,7 +881,7 @@ const accessibilityRoleExists = async (session, role, nameFragment) => {
     await expect(page.locator('.sidebar')).toBeHidden();
     await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeVisible();
     expect(errors).toEqual([]);
-    console.log('PASS: sistema visual, shell desktop/tablet/mobile, foco/Escape, movimento reduzido, contraste, capturas e ausência de overflow; regras de calendário e troca sem regressões.');
+    console.log('PASS: sistema visual, campo de comprovante responsivo, shell desktop/tablet/mobile, foco/Escape, movimento reduzido, contraste, capturas e ausência de overflow; regras de calendário e troca sem regressões.');
   } finally {
     await browser.close();
   }
