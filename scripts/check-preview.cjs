@@ -40,11 +40,32 @@ const accessibilityRoleExists = async (session, role, nameFragment) => {
   const { nodes } = await session.send('Accessibility.getFullAXTree');
   return nodes.some(node => !node.ignored && node.role?.value === role && node.name?.value?.includes(nameFragment));
 };
+const dashboardRequestIds = (page, panel) => page.locator(`${panel} .dashboard-row`).evaluateAll(rows => rows.map(row => row.dataset.request));
+const textContrastAudit = (page, selector) => page.locator(selector).evaluateAll(elements => {
+  const rgba = value => {
+    const channels = value.match(/[\d.]+/g)?.map(Number) || [];
+    return { rgb: channels.slice(0, 3), alpha: channels.length > 3 ? channels[3] : 1 };
+  };
+  const backgroundFor = element => {
+    for (let current = element; current; current = current.parentElement) {
+      const color = rgba(getComputedStyle(current).backgroundColor);
+      if (color.rgb.length === 3 && color.alpha > .99) return color.rgb;
+    }
+    return [255, 255, 255];
+  };
+  const channel = value => { value /= 255; return value <= .03928 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4; };
+  const luminance = rgb => .2126 * channel(rgb[0]) + .7152 * channel(rgb[1]) + .0722 * channel(rgb[2]);
+  return elements.map(element => {
+    const foreground = rgba(getComputedStyle(element).color).rgb, background = backgroundFor(element);
+    const a = luminance(foreground), b = luminance(background);
+    return { text: element.textContent.trim(), foreground, background, ratio: (Math.max(a, b) + .05) / (Math.min(a, b) + .05) };
+  });
+});
 const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').evaluate((container, name) => {
-  const input = container.querySelector('#evidence'), fileName = container.querySelector('#file-name');
+  const input = container.querySelector('#evidence'), fileName = container.querySelector('#file-name'), pickerAction = container.querySelector('.evidence-picker-action');
   const containerRect = container.getBoundingClientRect(), inputRect = input.getBoundingClientRect(), fileNameRect = fileName.getBoundingClientRect();
   const inside = rect => rect.left >= containerRect.left - .5 && rect.right <= containerRect.right + .5;
-  const style = getComputedStyle(container), fileNameStyle = getComputedStyle(fileName);
+  const style = getComputedStyle(container), inputStyle = getComputedStyle(input), fileNameStyle = getComputedStyle(fileName);
   return {
     display: style.display,
     fragments: container.getClientRects().length,
@@ -57,7 +78,18 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     fileNameOverflow: fileName.scrollWidth > fileName.clientWidth + 1,
     fileNameText: fileName.textContent,
     fileNameTitle: fileName.title,
+    fileNameAriaLabel: fileName.getAttribute('aria-label'),
+    fileNameHeight: fileNameRect.height,
+    containerHeight: containerRect.height,
     overflowWrap: fileNameStyle.overflowWrap,
+    lineClamp: fileNameStyle.webkitLineClamp,
+    inputOpacity: inputStyle.opacity,
+    inputPosition: inputStyle.position,
+    inputDescription: input.getAttribute('aria-describedby'),
+    describedText: input.getAttribute('aria-describedby').split(/\s+/).map(id => document.getElementById(id)?.textContent.trim() || '').join(' '),
+    inputFiles: input.files.length,
+    pickerActionText: pickerAction.textContent.trim(),
+    nativeChooserTextVisible: /No file chosen|Choose File/i.test(container.innerText),
     expectedName: name
   };
 }, expectedName);
@@ -83,9 +115,12 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     expect(fs.readFileSync(path.join(__dirname, '..', 'preview', 'index.html'), 'utf8')).not.toContain('Signaturia');
     expect(await noHorizontalOverflow(page)).toBe(true);
     await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('15');
-    await expect(page.locator('[data-dashboard-metric="service"]')).toHaveText('3');
+    await expect(page.locator('[data-dashboard-metric="service"]')).toHaveText('1');
     await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('2');
     await expect(page.locator('[data-dashboard-metric="total"]')).toHaveText('60');
+    expect(await dashboardRequestIds(page, '#dashboard-service')).toEqual(['TR-0082']);
+    expect(await dashboardRequestIds(page, '#dashboard-unattended')).toEqual(['TR-0087', 'TR-0088']);
+    expect((await dashboardRequestIds(page, '#dashboard-service')).filter(id => (new Set(['TR-0087', 'TR-0088'])).has(id))).toEqual([]);
     await page.locator('.skip-link').focus();
     await expect(page.locator('.skip-link')).toBeVisible();
     expect(await accessibilityRoleExists(accessibilitySession, 'link', 'Pular para o conte')).toBe(true);
@@ -159,7 +194,7 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
 
     await page.getByLabel('Buscar no painel').fill('João Pedro');
     await expect(page.locator('#dashboard-available .dashboard-row')).toHaveCount(1);
-    await expect(page.locator('#dashboard-service .dashboard-row')).toHaveCount(1);
+    await expect(page.locator('#dashboard-service .dashboard-row')).toHaveCount(0);
     await expect(page.locator('#dashboard-unattended .dashboard-row')).toHaveCount(1);
     await page.getByLabel('Buscar no painel').fill('sem-223');
     await expect(page.locator('#dashboard-available .dashboard-row')).toHaveCount(1);
@@ -190,9 +225,16 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     await expect(page.locator('.sidebar-backdrop')).toHaveJSProperty('inert', true);
     await expect(page.locator('#notifications')).toHaveJSProperty('inert', false);
     await page.getByLabel('Buscar no painel').fill('TR-0087');
-    await page.locator('#dashboard-service .dashboard-row').click();
+    await expect(page.locator('#dashboard-service .dashboard-row')).toHaveCount(0);
+    await expect(page.locator('#dashboard-unattended .dashboard-row')).toHaveCount(1);
+    await page.locator('#dashboard-unattended .dashboard-row').click();
     await expect(page.getByRole('heading', { name: 'Detalhe da troca', exact: true })).toBeVisible();
     await expect(page.getByLabel('Metadados da troca')).toContainText('TR-0087');
+    await expect(page.locator('.status-footer')).toHaveText('Simulação em memória · Nenhuma alteração em direitos de uso reais');
+    const footerContrast = await textContrastAudit(page, '.status-footer');
+    expect(footerContrast).toHaveLength(1);
+    expect(footerContrast[0].text).toBe('Simulação em memória · Nenhuma alteração em direitos de uso reais');
+    expect(footerContrast[0].ratio).toBeGreaterThanOrEqual(4.5);
     expect(await noHorizontalOverflow(page)).toBe(true);
     await expect(page.locator('.exchange-stage')).toHaveCount(4);
     await expect(page.locator('.exchange-stage strong')).toHaveText(['Pedido criado', 'Opção reservada', 'Aceite validado', 'Troca concluída']);
@@ -240,6 +282,9 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     await page.getByLabel('Situação', { exact: true }).selectOption('');
     expect([...new Set(statusContrast.map(item => item.state))].sort()).toEqual(semanticStates);
     expect(statusContrast.filter(item => item.ratio < 4.5)).toEqual([]);
+    const adjacentDateContrast = await textContrastAudit(page, '.month-day.outside .month-day-number');
+    expect(adjacentDateContrast.map(item => item.text)).toEqual(['29', '30', '31', '1', '2']);
+    expect(adjacentDateContrast.filter(item => item.ratio < 4.5)).toEqual([]);
 
     // Every mobile target is audited; documented dense calendar items use the 24 px exception.
     await page.setViewportSize({ width: 390, height: 844 });
@@ -264,10 +309,27 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     const yearDenseSelectors = ['.mini-month-header', '.year-day:not(.outside)'];
     expect(await normalTargetViolations(page, '.operational-calendar', yearDenseSelectors)).toEqual([]);
     await expectDenseSizes(page, yearDenseSelectors);
+    const expectedYearLegend = [
+      ['available', 'Disponível no banco'],
+      ['use', 'Uso confirmado'],
+      ['waiting', 'Pedido de troca aberto'],
+      ['reserved', 'Em negociação'],
+      ['blocked', 'Bloqueada · inadimplência'],
+      ['noanswer', 'Sem retorno']
+    ];
+    await expect(page.locator('.year-status-legend')).toHaveAttribute('aria-label', 'Legenda dos estados do calendário anual');
+    expect(await page.locator('.year-status-key').evaluateAll(items => items.map(item => [item.dataset.status, item.textContent.trim()]))).toEqual(expectedYearLegend);
+    const legendGeometry = await page.locator('.year-status-key .year-marker').evaluateAll(markers => markers.map(marker => {
+      const rect = marker.getBoundingClientRect(), style = getComputedStyle(marker);
+      return { width: rect.width, height: rect.height, shape: `${style.clipPath}|${style.borderRadius}|${style.borderTopStyle}|${style.borderTopWidth}|${style.backgroundColor}` };
+    }));
+    expect(legendGeometry).toHaveLength(6);
+    expect(legendGeometry.every(marker => marker.width >= 9 && marker.height >= 9)).toBe(true);
+    expect(new Set(legendGeometry.map(marker => marker.shape)).size).toBe(semanticStates.length);
     const yearStatusShapes = [];
     for (const state of semanticStates) {
       await page.getByLabel('Situação', { exact: true }).selectOption(state);
-      const shape = await page.locator(`.year-marker.${state}`).first().evaluate(element => {
+      const shape = await page.locator(`.mini-days .year-marker.${state}`).first().evaluate(element => {
         const style = getComputedStyle(element), fill = style.backgroundColor === 'rgba(0, 0, 0, 0)' ? 'transparent' : 'filled';
         return `${style.clipPath}|${style.borderRadius}|${style.borderTopStyle}|${style.borderTopWidth}|${fill}`;
       });
@@ -276,6 +338,11 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     await page.getByLabel('Situação', { exact: true }).selectOption('');
     expect(yearStatusShapes.map(([state]) => state).sort()).toEqual(semanticStates);
     expect(new Set(yearStatusShapes.map(([, shape]) => shape)).size).toBe(semanticStates.length);
+    const yearDayMarkerGeometry = await page.locator('.mini-days .year-marker').evaluateAll(markers => markers.map(marker => {
+      const rect = marker.getBoundingClientRect(); return { width: rect.width, height: rect.height };
+    }));
+    expect(yearDayMarkerGeometry.length).toBeGreaterThan(0);
+    expect(yearDayMarkerGeometry.every(marker => marker.width >= 7 && marker.height >= 7)).toBe(true);
     await page.locator('button[data-calendar-view="week"]').click();
     const weekDenseSelectors = ['.week-item'];
     expect(await normalTargetViolations(page, '.operational-calendar', weekDenseSelectors)).toEqual([]);
@@ -318,6 +385,10 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     // Week groups records on their check-in date and keeps each exact seven-night period.
     await expect(page.locator('[data-calendar-render="week"]')).toBeVisible();
     await expect(page.locator('.week-day')).toHaveCount(7);
+    await expect(page.getByText('Sem movimentações.', { exact: true }).first()).toBeVisible();
+    const weekEmptyContrast = await textContrastAudit(page, '.week-empty');
+    expect(weekEmptyContrast.length).toBeGreaterThan(0);
+    expect(weekEmptyContrast.every(item => item.text === 'Sem movimentações.' && item.ratio >= 4.5)).toBe(true);
     const houseCheckinDay = page.locator('.week-day').filter({ has: page.locator('[data-week="SEM-183"]') });
     await expect(houseCheckinDay.locator('.week-day-header strong')).toHaveText('qui');
     await expect(houseCheckinDay.locator('.week-day-header span')).toHaveText('15 de abr');
@@ -635,8 +706,16 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
 
     // Reservation is synchronized with Dashboard, Calendar, Bank, and Requests.
     await page.locator('[data-nav="dashboard"]').click();
+    await page.getByLabel('Buscar no painel').fill('');
     await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('14');
+    await expect(page.locator('[data-dashboard-metric="service"]')).toHaveText('2');
     await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('1');
+    expect(await dashboardRequestIds(page, '#dashboard-service')).toEqual(['TR-0082', 'TR-0087']);
+    expect(await dashboardRequestIds(page, '#dashboard-unattended')).toEqual(['TR-0088']);
+    await page.getByLabel('Buscar no painel').fill('TR-0087');
+    expect(await dashboardRequestIds(page, '#dashboard-service')).toEqual(['TR-0087']);
+    expect(await dashboardRequestIds(page, '#dashboard-unattended')).toEqual([]);
+    await page.getByLabel('Buscar no painel').fill('');
     await page.locator('[data-nav="calendar"]').click();
     await page.evaluate(start => { calendarDate = start; calendarView = 'week'; renderOperationalGrid(); }, reservedState.target.start);
     await expect(page.locator(`.week-item[data-week="${reservedState.target.id}"]`)).toHaveClass(/reserved/);
@@ -676,36 +755,57 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
 
     await page.getByRole('button', { name: 'Registrar contato e verificar 90 dias' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar contato' }).click();
-    await expect(page.getByLabel('Anexar aceite de WhatsApp')).toBeFocused();
+    const evidenceInput = page.locator('#evidence');
+    await expect(evidenceInput).toBeFocused();
+    await expect(evidenceInput).toHaveAttribute('aria-describedby', 'evidence-help evidence-status');
+    await expect(page.locator('.evidence-picker-action')).toHaveText('Selecionar arquivo');
+    await expect(page.locator('#evidence-status')).toContainText('Aguardando comprovante');
+    await expect(page.locator('.file')).not.toContainText(/No file chosen|Choose File/i);
+    await expect(evidenceInput).toHaveCSS('opacity', '0');
     expect(await activeElementIsUsable(page)).toBe(true);
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').contact)).toBe(true);
 
     // WhatsApp evidence remains local and accepts only the documented file types.
-    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid') });
+    await evidenceInput.setInputFiles({ name: 'aceite.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid') });
     await expect(page.getByText('Selecione uma imagem PNG, JPEG, WebP ou um PDF.')).toBeVisible();
     expect(await page.evaluate(() => requests.find(r => r.id === 'TR-0087').evidence)).toBe('');
     await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeDisabled();
-    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
+    await evidenceInput.setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
     await expect(page.locator('.exchange-stage').nth(2)).toHaveClass(/completed/);
     await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeEnabled();
+    await expect(page.locator('#evidence-status')).toHaveClass(/accepted/);
+    await expect(page.locator('#evidence-status')).toContainText('Comprovante aceito');
+    await expect(page.locator('.evidence-picker-action')).toHaveText('Substituir arquivo');
+    await expect(page.locator('.file')).not.toContainText(/No file chosen|Choose File/i);
+    await expect(evidenceInput).toHaveAttribute('aria-describedby', 'evidence-help evidence-status');
+    await expect(evidenceInput).toHaveAccessibleDescription(/Anexe PNG, JPEG, WebP ou PDF.*Comprovante aceito Arquivo aceito: aceite-demo\.png/);
+    expect(await evidenceInput.evaluate(input => input.files.length)).toBe(0);
     expect(await page.evaluate(() => { const r=requests.find(item=>item.id==='TR-0087');return {evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType,evidenceHistory:r.history.filter(item=>item.kind==='evidence').length} })).toEqual({evidence:'aceite-demo.png',evidenceAt:'2026-09-29',evidenceType:'image/png',evidenceHistory:1});
 
     // Valid → invalid fully invalidates evidence, progress, history, and review eligibility.
-    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-invalido.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid-again') });
+    await evidenceInput.setInputFiles({ name: 'aceite-invalido.txt', mimeType: 'text/plain', buffer: Buffer.from('invalid-again') });
     await expect(page.locator('.exchange-stage').nth(2)).not.toHaveClass(/completed/);
     await expect(page.locator('.exchange-stage').nth(2)).toContainText('Pendente');
     await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeDisabled();
+    await expect(page.locator('#evidence-status')).not.toHaveClass(/accepted/);
+    await expect(page.locator('#evidence-status')).toContainText('Aguardando comprovante');
+    await expect(page.locator('.evidence-picker-action')).toHaveText('Selecionar arquivo');
     expect(await page.evaluate(() => { const r=requests.find(item=>item.id==='TR-0087');return {evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType,evidenceHistory:r.history.filter(item=>item.kind==='evidence'||String(item.text).startsWith('Aceite de WhatsApp validado localmente:')).length} })).toEqual({evidence:'',evidenceAt:'',evidenceType:'',evidenceHistory:0});
     await expect(page.locator('.request-timeline')).not.toContainText('Aceite de WhatsApp validado localmente');
 
     // Invalid → valid restores one coherent evidence record. A long filename stays inside one continuous field at every breakpoint.
     const longEvidenceName = `aceite-${'comprovante'.repeat(18)}.png`;
-    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: longEvidenceName, mimeType: 'image/png', buffer: Buffer.from('preview-only') });
+    await evidenceInput.setInputFiles({ name: longEvidenceName, mimeType: 'image/png', buffer: Buffer.from('preview-only') });
     await expect(page.locator('.exchange-stage').nth(2)).toHaveClass(/completed/);
     await expect(page.getByRole('button', { name: 'Revisar e confirmar' })).toBeEnabled();
     await expect(page.locator('#notifications')).toHaveText('');
     await expect(page.locator('#file-name')).toHaveText(longEvidenceName);
     await expect(page.locator('#file-name')).toHaveAttribute('title', longEvidenceName);
+    await expect(page.locator('#file-name')).toHaveAttribute('aria-label', `Arquivo aceito: ${longEvidenceName}`);
+    const evidenceHistoryText = page.locator('.evidence-history-text');
+    await expect(evidenceHistoryText).toHaveCount(1);
+    await expect(evidenceHistoryText).toHaveAttribute('title', `Aceite de WhatsApp validado localmente: ${longEvidenceName}.`);
+    await expect(evidenceHistoryText).toHaveAttribute('aria-label', `Aceite de WhatsApp validado localmente: ${longEvidenceName}.`);
     for (const breakpoint of [
       { name: 'desktop', width: 1440, height: 960 },
       { name: 'tablet', width: 900, height: 900 },
@@ -724,13 +824,25 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
       expect(geometry.fileNameOverflow).toBe(false);
       expect(geometry.fileNameText).toBe(geometry.expectedName);
       expect(geometry.fileNameTitle).toBe(geometry.expectedName);
+      expect(geometry.fileNameAriaLabel).toBe(`Arquivo aceito: ${geometry.expectedName}`);
       expect(geometry.overflowWrap).toBe('anywhere');
+      expect(geometry.lineClamp).toBe('2');
+      expect(geometry.fileNameHeight).toBeLessThanOrEqual(46);
+      expect(geometry.containerHeight).toBeLessThan(300);
+      expect(geometry.inputOpacity).toBe('0');
+      expect(geometry.inputPosition).toBe('absolute');
+      expect(geometry.inputDescription).toBe('evidence-help evidence-status');
+      expect(geometry.describedText).toContain(`Comprovante aceito ${geometry.expectedName}`);
+      expect(geometry.inputFiles).toBe(0);
+      expect(geometry.pickerActionText).toBe('Substituir arquivo');
+      expect(geometry.nativeChooserTextVisible).toBe(false);
+      expect((await evidenceHistoryText.boundingBox()).height).toBeLessThanOrEqual(46);
       expect(await noHorizontalOverflow(page)).toBe(true);
       await prepareScreenshot(page);
       await page.screenshot({ path: path.join(artifacts, `exchange-evidence-${breakpoint.name}.png`), fullPage: true, animations: 'disabled' });
     }
     await page.setViewportSize({ width: 1440, height: 960 });
-    await page.getByLabel('Anexar aceite de WhatsApp').setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
+    await evidenceInput.setInputFiles({ name: 'aceite-demo.png', mimeType: 'image/png', buffer: Buffer.from('preview-only') });
     await expect(page.locator('#file-name')).toHaveText('aceite-demo.png');
     await expect(page.locator('#file-name')).toHaveAttribute('title', 'aceite-demo.png');
     expect(await page.evaluate(() => { const r=requests.find(item=>item.id==='TR-0087');return {evidence:r.evidence,evidenceAt:r.evidenceAt,evidenceType:r.evidenceType,evidenceHistory:r.history.filter(item=>item.kind==='evidence').length} })).toEqual({evidence:'aceite-demo.png',evidenceAt:'2026-09-29',evidenceType:'image/png',evidenceHistory:1});
@@ -756,7 +868,7 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     await expect(page.getByText('Troca concluída · somente leitura')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Adicionar observação' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Liberar reserva' })).toHaveCount(0);
-    await expect(page.getByLabel('Anexar aceite de WhatsApp')).toHaveCount(0);
+    await expect(page.locator('#evidence')).toHaveCount(0);
     const state = await page.evaluate(() => {
       const request = requests.find(r => r.id === 'TR-0087');
       return { request, origin: getWeek(request.origin), target: getWeek(request.target) };
@@ -771,8 +883,10 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     // Confirmation is synchronized with all operational views.
     await page.locator('#nav [data-nav="dashboard"]').click();
     await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('15');
-    await expect(page.locator('[data-dashboard-metric="service"]')).toHaveText('2');
+    await expect(page.locator('[data-dashboard-metric="service"]')).toHaveText('1');
     await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('1');
+    expect(await dashboardRequestIds(page, '#dashboard-service')).toEqual(['TR-0082']);
+    expect(await dashboardRequestIds(page, '#dashboard-unattended')).toEqual(['TR-0088']);
     await page.locator('[data-nav="calendar"]').click();
     await page.evaluate(start => { calendarDate = start; calendarView = 'week'; renderOperationalGrid(); }, state.origin.start);
     await expect(page.locator(`.week-item[data-week="${state.origin.id}"]`)).toHaveClass(/available/);
@@ -817,7 +931,14 @@ const evidenceFieldGeometry = (page, expectedName) => page.locator('.file').eval
     expect(released.firstCompatible).toBe('TR-0082');
     await page.locator('[data-nav="dashboard"]').click();
     await expect(page.locator('[data-dashboard-metric="available"]')).toHaveText('16');
+    await expect(page.locator('[data-dashboard-metric="service"]')).toHaveText('0');
     await expect(page.locator('[data-dashboard-metric="unattended"]')).toHaveText('2');
+    expect(await dashboardRequestIds(page, '#dashboard-service')).toEqual([]);
+    expect(await dashboardRequestIds(page, '#dashboard-unattended')).toEqual(['TR-0082', 'TR-0088']);
+    await page.getByLabel('Buscar no painel').fill('TR-0082');
+    expect(await dashboardRequestIds(page, '#dashboard-service')).toEqual([]);
+    expect(await dashboardRequestIds(page, '#dashboard-unattended')).toEqual(['TR-0082']);
+    await page.getByLabel('Buscar no painel').fill('');
     await page.locator('[data-nav="calendar"]').first().click();
     await page.evaluate(start=>{calendarDate=start;calendarView='week';renderOperationalGrid()},released.week.start);
     await expect(page.locator(`.week-item[data-week="${expiredTargetId}"]`)).toHaveClass(/available/);
