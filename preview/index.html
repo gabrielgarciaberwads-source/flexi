@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f6f5f2">
 <title>Ownerinc · Flexi · Gestão de trocas</title>
 <style>
 @font-face{font-family:Novelin;src:url('./assets/novelin-regular.otf') format('opentype');font-style:normal;font-weight:400;font-display:swap}
@@ -170,11 +170,111 @@ main{margin-left:252px}.topbar{background:#fff}.content{max-width:1720px}
 .observation-field{display:block;margin-top:18px}.observation-field textarea{display:block;width:100%;margin-top:7px;resize:vertical}
 @media(max-width:1180px){.exchange-detail-grid{grid-template-columns:1fr}.exchange-aside{padding:20px}.exchange-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.exchange-meta>div:nth-child(2){border-right:0}.exchange-meta>div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
 @media(max-width:760px){.exchange-detail-heading{align-items:flex-start;flex-direction:column;gap:12px}.exchange-detail-heading h1{font-size:29px}.exchange-meta{grid-template-columns:1fr}.exchange-meta>div{border-right:0;border-bottom:1px solid var(--line)}.exchange-meta>div:last-child{border-bottom:0}.exchange-panels{grid-template-columns:1fr}.exchange-arrow{transform:rotate(90deg)}.exchange-progress{grid-template-columns:1fr;gap:13px}.exchange-stage{border-top:0;border-left:3px solid #d9d7d1;padding:0 0 0 18px;min-height:48px}.exchange-stage::before{top:1px;left:-7px}.exchange-option{grid-template-columns:auto minmax(0,1fr)}.exchange-option button{grid-column:1/-1;width:100%}.exchange-operation-actions,.exchange-readonly{align-items:stretch;flex-direction:column}.exchange-operation-actions button,.exchange-readonly-nav button{width:100%}.exchange-operation-actions .primary{margin-left:0}.exchange-readonly-nav{display:grid}}
+
+/* Task 4 system pass. Colors are functional interface values, not additions
+   to the Ownerinc brand palette. */
+:root{
+  --canvas:#f6f5f2;--surface:#fff;--surface-subtle:#f8f7f4;--ink:#1d1d1b;
+  --muted:#5c5b56;--line:#dedcd6;--line-strong:#c9c6be;
+  --blue:#1558c0;--blue-hover:#10489d;--focus:#0d5bd7;
+  --radius-sm:5px;--radius-md:8px;--radius-lg:12px;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+  --shadow-layer:0 18px 48px #1d1d1b24;--z-topbar:10;--z-sidebar-backdrop:25;--z-sidebar:30;--z-layer:40;--z-dialog:50;--z-toast:60
+}
+html{font-family:Novelin,sans-serif;background:var(--canvas);overflow-x:clip}
+body{min-width:0;background:var(--canvas);color:var(--ink);line-height:1.5;overflow-wrap:anywhere}
+body.layer-open,body.sidebar-open{overflow:hidden}
+button,input,select,textarea{font-family:inherit}
+button,a,input,select,textarea{touch-action:manipulation}
+button{min-height:44px;border-color:var(--line-strong);border-radius:var(--radius-sm);font-weight:700}
+button:hover:not(:disabled){background:#f0efeb;border-color:#b8b5ad}
+button:active:not(:disabled){transform:translateY(1px)}
+button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+button.primary:hover:not(:disabled){background:var(--blue-hover);border-color:var(--blue-hover)}
+button.danger{background:#fff;color:#8f3040;border-color:#d8aeb6}
+.link{min-height:44px;color:var(--blue)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.field,select,input[type=date],input[type=file],textarea{min-height:44px;border-color:var(--line-strong);border-radius:var(--radius-sm);background:#fff;color:var(--ink)}
+select{background-color:#fff;color:var(--ink)}
+h1,h2,h3{color:var(--ink);text-wrap:balance}p{ text-wrap:pretty }
+h1{font-weight:700;line-height:1.12}h2{line-height:1.2}h3{line-height:1.3}
+.mono,.summary strong,.metric-card strong,.exchange-meta strong,time{font-variant-numeric:tabular-nums}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.skip-link{position:fixed;z-index:calc(var(--z-toast) + 1);top:10px;left:10px;transform:translateY(-150%);background:var(--ink);color:#fff;padding:10px 14px;border-radius:var(--radius-sm);font-weight:700}
+.skip-link:focus{transform:translateY(0)}
+.surface,.metric-card,.dashboard-panel,.exchange-meta{border-color:var(--line);border-radius:var(--radius-md)}
+.topbar{position:sticky;top:0;z-index:var(--z-topbar);border-color:var(--line);min-width:0}
+.topbar-context,.topbar-meta{min-width:0}.topbar-context #breadcrumb{color:#35342f;font-weight:700}
+main,.content,.heading>div,.dashboard-tools,.calendar-commandbar,.calendar-filters,.exchange-detail-grid{min-width:0}
+.content{width:100%}
+.brand-logo{aspect-ratio:311/149;object-fit:contain}
+.sidebar{z-index:var(--z-sidebar);border-color:var(--line);transition:transform var(--motion-panel) var(--ease-out),visibility 0s linear 0s}
+.sidebar-brand-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)}
+.mobile-nav-toggle,.mobile-nav-close{display:none}
+.sidebar-backdrop{display:none}
+.nav button.active{background:var(--ink);color:#fff}.nav button:hover:not(.active){background:#f0efeb;color:var(--ink)}
+.dashboard-list,.drawer-body,.dialog,.calendar-stage,.scroll,.table-wrap{overscroll-behavior:contain}
+.dashboard-empty,.calendar-empty-state,.observation-empty,.empty{color:var(--muted);background:var(--surface-subtle);font-size:14px;line-height:1.55;text-align:center}
+.badge{border:1px solid currentColor;font-weight:700;line-height:1.25}
+.available,.week.available:hover{background:#e8f3ed;color:#205f43;border-left-color:#3d8462}
+.use,.week.use:hover{background:#edf1f7;color:#475b78;border-left-color:#788da9}
+.waiting,.week.waiting:hover{background:#fff4d9;color:#735414;border-left-color:#b98b2d}
+.reserved,.week.reserved:hover{background:#efebfb;color:#62418f;border-left-color:#8768b7}
+.blocked,.week.blocked:hover{background:#fbeaec;color:#8f3040;border-left-color:#b95e6c}
+.noanswer,.week.noanswer:hover{background:#f0f1f3;color:#5c616a;border-left-color:#8f949c}
+.year-marker{width:5px;height:5px;background:#5c616a}
+.year-marker.available{border-radius:50%;clip-path:none}.year-marker.use{border-radius:1px;clip-path:none}.year-marker.waiting{border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.year-marker.reserved{border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.year-marker.blocked{border-radius:0;clip-path:polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%)}
+.year-marker.noanswer{border-radius:50%;background:transparent;border:1px solid #5c616a}
+.status-symbol{display:none}.calendar-segmented button,.calendar-navigation button,.focus-toggle,.square{min-height:44px}
+.calendar-segmented button[aria-pressed="true"],.calendar-segmented button[aria-pressed="true"]:hover:not(:disabled){background:var(--ink);border-color:var(--ink);color:#fff}
+.mini-month-header{min-height:40px}.year-day{min-height:28px}.month-day-number{min-width:36px;min-height:36px}.month-overflow{min-height:28px}
+.overlay{z-index:var(--z-layer);background:#1d1d1b52;overscroll-behavior:contain}.dialog-overlay{z-index:var(--z-dialog)}
+.drawer,.dialog{border:1px solid var(--line);box-shadow:var(--shadow-layer)}
+.drawer{border-width:0 0 0 1px}.dialog{border-radius:var(--radius-lg)}
+.toast{z-index:var(--z-toast);background:#242a26;box-shadow:0 10px 28px #1d1d1b30}
+.file{border-color:var(--line-strong);border-radius:var(--radius-md);background:var(--surface-subtle)}
+
+@media(min-width:701px) and (max-width:1100px){
+  .sidebar{width:112px;padding:24px 12px 18px}.brand{padding:0 3px 18px}.brand-logo{width:82px;margin:auto}
+  .workspace{display:block;padding:12px 3px;margin-bottom:16px;text-align:center;font-size:11px;line-height:1.35}
+  .nav button{justify-content:center;padding:11px 8px}.nav button span{display:none}.nav .icon{width:24px;height:24px}
+  .profile{justify-content:center;padding:10px 4px}.profile>div:last-child{display:none}.explore-trigger{justify-content:center;padding:10px 8px}.explore-trigger span{display:none}
+  main{margin-left:112px}.topbar{padding-inline:22px}.content{padding:24px}.dashboard-columns{grid-template-columns:1fr}.dashboard-list{max-height:330px}
+}
+
+@media(max-width:700px){
+  .sidebar{display:flex;width:min(320px,calc(100vw - 40px));padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));transform:translateX(-105%);visibility:hidden;box-shadow:var(--shadow-layer)}
+  .sidebar-open .sidebar{transform:translateX(0);visibility:visible}.sidebar-brand-row{align-items:center}.brand{padding:0 4px 18px}.brand-logo{width:136px}
+  .mobile-nav-close{display:inline-flex;flex:0 0 44px}.workspace{display:block;padding:14px 8px;margin-bottom:18px;font-size:14px;text-align:left}
+  .nav button{justify-content:flex-start;padding:11px 12px}.nav button span{display:inline}.profile{display:flex}.nav-footer{display:block;border-top:1px solid var(--line);padding-top:14px}
+  .explore-trigger{justify-content:flex-start;padding:10px 12px}.explore-trigger span{display:inline}
+  .sidebar-backdrop{position:fixed;inset:0;z-index:var(--z-sidebar-backdrop);display:block;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:0;background:#1d1d1b5c}.sidebar-backdrop[hidden]{display:none}
+  main{margin-left:0}.topbar{height:64px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px}
+  .mobile-nav-toggle{display:inline-flex;width:44px;padding:9px}.topbar>div:first-of-type{display:flex}.topbar-context{font-size:12px;gap:5px!important;white-space:nowrap;overflow:hidden}.topbar-context #breadcrumb{overflow:hidden;text-overflow:ellipsis}.topbar-meta{justify-self:end}.topbar-meta .demo{display:none}
+  .content{padding:20px max(12px,env(safe-area-inset-right)) 28px max(12px,env(safe-area-inset-left))}.heading{gap:14px}.heading>.primary{width:100%}
+  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric-card{padding:15px}.metric-card strong{font-size:27px}.metric-card span{font-size:12px;line-height:1.35}
+  .dashboard-columns{grid-template-columns:1fr;gap:12px}.dashboard-list{max-height:none}.dashboard-panel-head{align-items:flex-start;flex-direction:column;gap:4px}
+  .calendar-commandbar,.calendar-filters{padding:12px}.calendar-segmented button{min-height:44px}.year-day{min-height:26px}.mini-month-header{min-height:36px}
+  .month-week{grid-template-rows:30px repeat(3,26px) 28px;min-height:136px}.month-event{min-height:24px;height:24px;padding:2px 4px;margin:1px;justify-content:center}.month-event-text{display:none}.month-event .status-symbol{display:inline-flex;align-items:center}.month-event .status-symbol .icon{width:13px;height:13px}
+  .month-day-number{min-width:28px;min-height:28px}.month-overflow{min-height:24px}
+  .exchange-section,.exchange-aside{padding:18px}.exchange-panel{padding:16px}.exchange-facts{grid-template-columns:minmax(76px,.75fr) minmax(0,1.25fr)}
+  .exchange-operation-actions,.exchange-readonly-nav{position:relative}.exchange-operation-actions button,.exchange-readonly-nav button{min-height:48px}
+  .drawer{width:100%;border-left:0}.drawer-head,.drawer-body{padding:20px}.drawer-foot{padding:16px 20px calc(16px + env(safe-area-inset-bottom))}.drawer-foot button{flex:1 1 150px}
+  .dialog-overlay{padding:12px}.dialog{width:100%;max-height:calc(100dvh - 24px);padding:22px}.dialog .actions{display:grid;grid-template-columns:1fr}.dialog .actions button{width:100%}
+  .toast{bottom:calc(16px + env(safe-area-inset-bottom));width:calc(100vw - 24px);max-width:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  html:focus-within{scroll-behavior:auto}.sidebar,.skip-link,button{animation:none!important;transition:none!important}
+}
 </style>
 </head>
 <body>
-<aside class="sidebar"><div class="brand"><img class="brand-logo" src="./assets/ownerinc-completa-black.png" alt="Ownerinc"></div><div class="workspace">Flexi · Gestão de trocas</div><nav class="nav" aria-label="Navegação principal" id="nav"></nav><div class="nav-footer"><div class="profile"><div class="avatar">PS</div><div><strong>Paula Silva</strong><p>Operadora · Demonstração</p></div></div></div></aside>
-<main><div class="topbar"><div>Ownerinc <span>/</span> <span id="breadcrumb">Dashboard</span></div><div><span class="demo">Prévia · dados fictícios</span><span>29 set 2026</span></div></div><div id="app" class="content"></div></main><div id="layers"></div><div id="notifications" aria-live="polite"></div>
+<a class="skip-link" href="#main-content">Pular para o conteúdo</a>
+<aside class="sidebar" id="sidebar" aria-label="Menu Flexi"><div class="sidebar-brand-row"><div class="brand"><img class="brand-logo" src="./assets/ownerinc-completa-black.png" alt="Ownerinc" width="311" height="149"></div><button class="ghost square mobile-nav-close" type="button" data-action="mobile-nav-close" aria-label="Fechar menu"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="workspace">Flexi · Gestão de trocas</div><nav class="nav" aria-label="Navegação principal" id="nav"></nav><div class="nav-footer"><div class="profile"><div class="avatar">PS</div><div><strong>Paula Silva</strong><p>Operadora · Demonstração</p></div></div></div></aside>
+<button class="sidebar-backdrop" type="button" data-action="mobile-nav-close" aria-label="Fechar menu" hidden></button>
+<main id="main-content" tabindex="-1"><div class="topbar"><button class="ghost mobile-nav-toggle" type="button" data-action="mobile-nav-open" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div class="topbar-context">Ownerinc <span>/</span> <span id="breadcrumb">Dashboard</span></div><div class="topbar-meta"><span class="demo">Prévia · dados fictícios</span><span>29 set 2026</span></div></div><div id="app" class="content"></div></main><div id="layers"></div><div id="notifications" aria-live="polite" aria-atomic="true"></div>
 <script>
 const paths={dashboard:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',calendar:'M4 5h16v16H4zM8 3v4M16 3v4M4 10h16M8 14h2M14 14h2',bank:'M3 7l9-4 9 4M4 8h16M6 9v9M12 9v9M18 9v9M3 21h18M4 18h16',requests:'M4 5h16v15H4zM8 3v4M16 3v4M8 11h8M8 15h5',users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 4a4 4 0 0 1 0 8M22 21v-2a4 4 0 0 0-3-3.87M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',plus:'M12 5v14M5 12h14',left:'M15 6l-6 6 6 6',right:'M9 6l6 6-6 6',close:'M6 6l12 12M18 6L6 18',search:'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',arrow:'M3 8h17l-4-4M21 16H4l4 4',check:'M5 12l4 4L19 6',clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',lock:'M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4',file:'M14 2H6v20h12V6zM14 2v5h5M9 12h6M9 16h6'};
 /* Lucide (ISC) and Phosphor (MIT). Complete notices included below. */
@@ -258,10 +358,10 @@ function rejectExchangeConfirmation(message='As condições exibidas mudaram. O 
 function requestStatusClass(r){return r.status==='Concluído'?'available':r.expired?'waiting':r.target?'reserved':'use'}
 function exchangeBackLabel(){return {dashboard:'ao Dashboard',calendar:'ao Calendário',bank:'ao Banco de semanas',requests:'aos Pedidos'}[exchangeReturnView]||'aos Pedidos'}
 function toast(t){$('#notifications').innerHTML=`<div class="toast">${escapeHtml(t)}</div>`;setTimeout(()=>$('#notifications').innerHTML='',4500)}
-function nav(){const entries=[['dashboard','Dashboard','dashboard'],['calendar','Calendário','calendar'],['bank','Banco de semanas','bank'],['requests','Pedidos','requests'],['owners','Proprietários','users']];$('#nav').innerHTML=entries.map(([key,text,i])=>`<button data-nav="${key}" class="${view===key?'active':''}" ${view===key?'aria-current="page"':''}>${icon(i)}<span>${text}</span></button>`).join('');$('#breadcrumb').textContent=entries.find(e=>e[0]===view)?.[1]|| (view==='new'?'Novo pedido':'Detalhe da troca')}
+function nav(){const entries=[['dashboard','Dashboard','dashboard'],['calendar','Calendário','calendar'],['bank','Banco de semanas','bank'],['requests','Pedidos','requests'],['owners','Proprietários','users']];$('#nav').innerHTML=entries.map(([key,text,i])=>`<button data-nav="${key}" class="${view===key?'active':''}" aria-label="${text}" title="${text}" ${view===key?'aria-current="page"':''}>${icon(i)}<span>${text}</span></button>`).join('');$('#breadcrumb').textContent=entries.find(e=>e[0]===view)?.[1]|| (view==='new'?'Novo pedido':'Detalhe da troca')}
 function heading(title,subtitle,cta=true){return `<div class="heading"><div><h1>${title}</h1><p>${subtitle}</p></div>${cta?`<button class="primary" data-action="new">${icon('plus')} Novo pedido de troca</button>`:''}</div>`}
 function render(){nav();if(view==='dashboard')renderDashboard();if(view==='calendar')renderCalendar();if(view==='bank')renderBank();if(view==='requests')renderRequests();if(view==='owners')renderOwners();if(view==='new')renderNew();if(view==='negotiation')renderExchangeDetail()}
-function showView(v){closeLayer();if(v!==view)setCalendarFocus(false,false);view=v;if(filtersByView[v])filters=filtersByView[v];render()}
+function showView(v){closeLayer();if(sidebarOpen)setMobileNavigation(false,false);if(v!==view)setCalendarFocus(false,false);view=v;if(filtersByView[v])filters=filtersByView[v];render()}
 let calendarFocus=false,calendarPageScroll=0;
 function setCalendarFocus(enabled,restore=true){
   if(enabled===calendarFocus)return;
@@ -272,6 +372,30 @@ function setCalendarFocus(enabled,restore=true){
   if(enabled)window.scrollTo(0,0);
   else if(restore){window.scrollTo(0,calendarPageScroll);button?.focus({preventScroll:true});}
 }
+const mobileNavigationQuery=matchMedia('(max-width:700px)');
+let sidebarOpen=false,mobileNavigationReturnFocus=null;
+function focusableElements(container){return [...container.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')].filter(element=>!element.hidden&&element.getClientRects().length)}
+function syncShellInert(){
+  const hasLayer=!!$('#layers').children.length,isMobile=mobileNavigationQuery.matches;
+  $('#main-content').inert=hasLayer||(isMobile&&sidebarOpen);
+  $('#sidebar').inert=hasLayer||(isMobile&&!sidebarOpen);
+}
+function setMobileNavigation(enabled,restore=true){
+  if(!mobileNavigationQuery.matches)enabled=false;
+  if(enabled===sidebarOpen){syncShellInert();return}
+  if(enabled)mobileNavigationReturnFocus=document.activeElement;
+  sidebarOpen=enabled;document.body.classList.toggle('sidebar-open',enabled);
+  const toggle=$('.mobile-nav-toggle'),backdrop=$('.sidebar-backdrop');
+  toggle.setAttribute('aria-expanded',String(enabled));backdrop.hidden=!enabled;
+  syncShellInert();
+  if(enabled)$('.mobile-nav-close').focus({preventScroll:true});
+  else if(restore){const target=mobileNavigationReturnFocus?.isConnected?mobileNavigationReturnFocus:toggle;target?.focus({preventScroll:true})}
+}
+function syncResponsiveNavigation(){
+  if(!mobileNavigationQuery.matches){sidebarOpen=false;document.body.classList.remove('sidebar-open');$('.sidebar-backdrop').hidden=true;$('.mobile-nav-toggle').setAttribute('aria-expanded','false')}
+  syncShellInert();
+}
+mobileNavigationQuery.addEventListener('change',syncResponsiveNavigation);
 function dashboardMatches(value){return !dashboardQuery||value.toLocaleLowerCase('pt-BR').includes(dashboardQuery.toLocaleLowerCase('pt-BR'))}
 function dashboardWeekRow(w){const u=getUnit(w);return `<button class="dashboard-row" data-week="${w.id}"><strong>${u.name}<span>${w.id}</span></strong><p>${range(w)} · ${escapeHtml(w.originalOwner)}</p></button>`}
 function dashboardRequestRow(r){const o=getWeek(r.origin),u=getUnit(o);return `<button class="dashboard-row" data-request="${r.id}"><strong>${escapeHtml(r.owner)}<span>${r.id}</span></strong><p>${u.name} · ${range(o)} · ${escapeHtml(r.status)}</p></button>`}
@@ -297,7 +421,7 @@ function renderDashboard(){
       <article class="metric-card"><strong data-dashboard-metric="unattended">${unattended.length}</strong><span>Pedidos sem atendimento</span></article>
       <article class="metric-card"><strong data-dashboard-metric="total">${selectDashboardTotalWeeks(weeks)}</strong><span>Total de semanas</span></article>
     </section>
-    <div class="dashboard-tools"><h2>Operação</h2><label class="search">${icon('search')}<input class="field" id="dashboard-search" type="search" aria-label="Buscar no painel" placeholder="Buscar semana, pedido, titular ou unidade" value="${escapeHtml(dashboardQuery)}"></label></div>
+    <div class="dashboard-tools"><h2>Operação</h2><label class="search">${icon('search')}<input class="field" id="dashboard-search" name="dashboard-search" type="search" autocomplete="off" aria-label="Buscar no painel" placeholder="Buscar semana, pedido, titular ou unidade…" value="${escapeHtml(dashboardQuery)}"></label></div>
     <div class="dashboard-columns">
       <section class="dashboard-panel" id="dashboard-available"><header class="dashboard-panel-head"><h2>Semanas disponíveis</h2><span id="dashboard-available-count"></span></header><div class="dashboard-list" id="dashboard-available-list"></div><footer class="dashboard-panel-foot"><button data-nav="bank">Ver todos ${icon('right')}</button></footer></section>
       <section class="dashboard-panel" id="dashboard-service"><header class="dashboard-panel-head"><h2>Em atendimento</h2><span id="dashboard-service-count"></span></header><div class="dashboard-list" id="dashboard-service-list"></div><footer class="dashboard-panel-foot"><button data-nav="requests">Ver todos ${icon('right')}</button></footer></section>
@@ -341,7 +465,7 @@ function renderOperationalCalendar(){
         <select id="kind-filter" aria-label="Tipo de acomodação"><option value="">Todos</option><option value="Casa">Casas</option><option value="Flat">Flats</option></select>
         <select id="type-filter" aria-label="Tipologia"><option value="">Todas as tipologias</option>${[...new Set(units.map(u=>u.type))].sort().map(t=>`<option value="${t}">Tipologia ${t}</option>`).join('')}</select>
         <select id="state-filter" aria-label="Situação"><option value="">Todas as situações</option>${Object.entries(labels).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select>
-        <label class="search">${icon('search')}<input class="field" id="calendar-search" type="search" aria-label="Buscar unidade, titular ou semana" placeholder="Buscar unidade, titular ou código" value="${escapeHtml(filters.q)}"></label>
+        <label class="search">${icon('search')}<input class="field" id="calendar-search" name="calendar-search" type="search" autocomplete="off" aria-label="Buscar unidade, titular ou semana" placeholder="Buscar unidade, titular ou código…" value="${escapeHtml(filters.q)}"></label>
       </div>
       <div class="calendar-context"><span id="visible-count"></span><span>Casas: quinta–quinta · Flats: sexta–sexta · 7 noites</span></div>
       <div class="calendar-stage" id="calendar-grid" tabindex="0" role="region" aria-label="Conteúdo do calendário"></div>
@@ -358,7 +482,7 @@ function renderYearCalendar(records){
       if(index<leading)return '<span class="year-day outside" aria-hidden="true"></span>';
       const day=index-leading+1,current=`${selectedYear}-${String(monthIndex+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,items=yearRecords.filter(w=>w.start===current),states=[...new Set(items.map(w=>w.state))].slice(0,3);
       const itemText=items.length?`, ${items.length} ${items.length===1?'semana':'semanas'}: ${states.map(state=>labels[state]).join(', ')}`:'';
-      return `<button class="year-day ${items.length?'has-items':''} ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="${escapeHtml(`${full(current)}${itemText}. Abrir semana.`)}"><span>${day}</span>${states.length?`<span class="year-markers" aria-hidden="true">${states.map(state=>`<i class="year-marker ${state}"></i>`).join('')}</span>`:''}</button>`;
+      return `<button class="year-day ${items.length?'has-items':''} ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="${escapeHtml(`${full(current)}${itemText}. Abrir semana.`)}" title="${escapeHtml(items.length?states.map(state=>labels[state]).join(' · '):'Sem movimentações')}"><span>${day}</span>${states.length?`<span class="year-markers" aria-hidden="true">${states.map(state=>`<i class="year-marker ${state}" data-status="${state}"></i>`).join('')}</span>`:''}</button>`;
     }).join('');
     return `<section class="mini-month"><button class="mini-month-header" data-calendar-month="${first}" aria-label="Abrir ${monthName(monthIndex)} de ${selectedYear} na visualização mensal">${monthName(monthIndex)}</button><div class="mini-weekdays" aria-hidden="true">${weekdays.map(day=>`<span>${day}</span>`).join('')}</div><div class="mini-days">${cells}</div></section>`;
   }).join('');
@@ -371,7 +495,7 @@ function renderMonthCalendar(records){
   for(let rowStart=gridStart;rowStart<gridEnd;rowStart=add(rowStart,7)){
     const rowEnd=add(rowStart,7),rowItems=monthRecords.filter(w=>w.start<rowEnd&&w.end>rowStart),shown=rowItems.slice(0,3),hidden=rowItems.slice(3),key=rowStart;
     const days=Array.from({length:7},(_,index)=>{const current=add(rowStart,index),outside=date(current).getUTCMonth()!==calendarMonth;return `<div class="month-day ${outside?'outside':''}" style="grid-column:${index+1};grid-row:1/-1"><button class="month-day-number ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="Abrir semana de ${full(current)}">${date(current).getUTCDate()}</button></div>`}).join('');
-    const items=shown.map((w,index)=>{const segmentStart=w.start>rowStart?w.start:rowStart,segmentEnd=w.end<rowEnd?w.end:rowEnd,startColumn=Math.round((date(segmentStart)-date(rowStart))/86400000)+1,span=Math.max(1,Math.round((date(segmentEnd)-date(segmentStart))/86400000)),u=getUnit(w),label=`${u.name} · ${labels[w.state]}`;return `<button class="month-event ${w.state} ${w.start<rowStart?'continues-before':''} ${w.end>rowEnd?'continues-after':''}" data-week="${w.id}" data-period-start="${w.start}" data-period-end="${w.end}" data-segment-start="${segmentStart}" data-segment-end="${segmentEnd}" style="grid-column:${startColumn}/span ${span};grid-row:${index+2}" title="${escapeHtml(`${label} · ${range(w)}`)}" aria-label="${escapeHtml(`${label}, ${range(w)}, ${calendarPerson(w)}`)}"><span class="month-event-text">${escapeHtml(label)}</span></button>`}).join('');
+    const items=shown.map((w,index)=>{const segmentStart=w.start>rowStart?w.start:rowStart,segmentEnd=w.end<rowEnd?w.end:rowEnd,startColumn=Math.round((date(segmentStart)-date(rowStart))/86400000)+1,span=Math.max(1,Math.round((date(segmentEnd)-date(segmentStart))/86400000)),u=getUnit(w),label=`${u.name} · ${labels[w.state]}`;return `<button class="month-event ${w.state} ${w.start<rowStart?'continues-before':''} ${w.end>rowEnd?'continues-after':''}" data-week="${w.id}" data-period-start="${w.start}" data-period-end="${w.end}" data-segment-start="${segmentStart}" data-segment-end="${segmentEnd}" style="grid-column:${startColumn}/span ${span};grid-row:${index+2}" title="${escapeHtml(`${label} · ${range(w)}`)}" aria-label="${escapeHtml(`${label}, ${range(w)}, ${calendarPerson(w)}`)}"><span class="status-symbol" aria-hidden="true">${icon(stateIcon(w.state))}</span><span class="month-event-text">${escapeHtml(label)}</span></button>`}).join('');
     if(hidden.length)calendarOverflow[key]={title:`${short(rowStart)} — ${short(add(rowEnd,-1))}`,ids:hidden.map(w=>w.id)};
     rows+=`<div class="month-week">${days}${items}${hidden.length?`<button class="month-overflow" data-calendar-overflow="${key}" aria-label="Mostrar mais ${hidden.length} itens de ${short(rowStart)} a ${short(add(rowEnd,-1))}">+${hidden.length} itens</button>`:''}</div>`;
   }
@@ -425,7 +549,7 @@ function renderCalendar(){
       <select id="kind-filter" aria-label="Tipo de acomodação"><option value="">Todos</option><option value="Casa">Casas</option><option value="Flat">Flats</option></select>
       ${bank?'<select id="unit-filter" aria-label="Unidade"></select>':''}
       ${bank?`<select id="type-filter" aria-label="Tipologia"><option value="">Todas as tipologias</option>${[...new Set(units.map(u=>u.type))].sort().map(t=>`<option value="${t}">Tipologia ${t}</option>`).join('')}</select>`:`<select id="state-filter" aria-label="Situação"><option value="">Todas as situações</option>${Object.entries(labels).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>`}
-      <label class="search">${icon('search')}<input class="field" id="calendar-search" aria-label="${bank?'Buscar unidade ou titular de origem':'Buscar unidade ou titular'}" placeholder="${bank?'Buscar unidade ou titular de origem':'Buscar unidade ou titular'}"></label></div>
+      <label class="search">${icon('search')}<input class="field" id="calendar-search" name="calendar-search" type="search" autocomplete="off" aria-label="${bank?'Buscar unidade ou titular de origem':'Buscar unidade ou titular'}" placeholder="${bank?'Buscar unidade ou titular de origem…':'Buscar unidade ou titular…'}"></label></div>
       <div class="filterline">${bank?'<span>Somente estoque disponível</span>':'<label><input type="checkbox" id="only-available" aria-label="Somente disponíveis"> Somente disponíveis</label>'}<span id="visible-count"></span><span>Casas: qui–qui &nbsp; · &nbsp; Flats: sex–sex</span></div>
       <div class="scroll" tabindex="0" role="region" aria-label="Calendário com rolagem horizontal e vertical"><div class="calendar" id="calendar-grid"></div></div>
       <div class="legend">${calendarLegend()}</div>
@@ -462,14 +586,14 @@ function renderGrid(){
   $('#calendar-grid').innerHTML=`<div class="cal-head"><div class="unit-head">Unidade / tipologia</div><div class="days" style="grid-template-columns:repeat(${count},1fr)">${Array.from({length:count},(_,i)=>{let d=date(add(start,i)),day=d.getUTCDay();return `<div class="day ${day===0||day===6?'weekend':''}">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][day]}<b>${i+1}</b></div>`}).join('')}</div></div>${rows||'<div class="empty">Nenhuma semana corresponde aos filtros.</div>'}`;
   $('#visible-count').textContent=`${visible} semanas ${bank?'disponíveis ':''}neste período`;
 }
-function openLayer(html,dialog=false){if(!$('#layers').children.length)returnFocus=document.activeElement;$('#layers').innerHTML=`<div class="overlay ${dialog?'dialog-overlay':''}" data-backdrop="true"><section role="dialog" aria-modal="true" aria-labelledby="layer-title" class="${dialog?'dialog':'drawer'}" tabindex="-1">${html}</section></div>`;document.body.style.overflow='hidden';$('#layers [role=dialog]').focus()}
-function closeLayer(){const hadLayer=!!$('#layers').children.length;$('#layers').innerHTML='';document.body.style.overflow='';pendingExchangeConfirmation=null;if(hadLayer&&returnFocus?.isConnected)returnFocus.focus()}
+function openLayer(html,dialog=false){if(sidebarOpen)setMobileNavigation(false,true);if(!$('#layers').children.length)returnFocus=document.activeElement;$('#layers').innerHTML=`<div class="overlay ${dialog?'dialog-overlay':''}" data-backdrop="true"><section role="dialog" aria-modal="true" aria-labelledby="layer-title" class="${dialog?'dialog':'drawer'}" tabindex="-1">${html}</section></div>`;document.body.classList.add('layer-open');syncShellInert();$('#layers [role=dialog]').focus()}
+function closeLayer(){const hadLayer=!!$('#layers').children.length,focusTarget=returnFocus;$('#layers').innerHTML='';document.body.classList.remove('layer-open');pendingExchangeConfirmation=null;syncShellInert();if(hadLayer){returnFocus=null;if(focusTarget?.isConnected&&!focusTarget.inert)focusTarget.focus({preventScroll:true})}}
 function openWeek(id){const w=getWeek(id),u=getUnit(w),r=requests.find(r=>r.origin===id||r.target===id),matches=compatible(w);const eligible=w.original&&!w.traded&&w.state!=='blocked'&&w.state!=='available'&&!requests.some(r=>r.origin===id&&r.status!=='Concluído');openLayer(`<header class="drawer-head"><div><h2 id="layer-title">${u.name} · Tipologia ${u.type}</h2><p>${w.id} · ${range(w)}</p></div><button class="ghost square" data-action="close" aria-label="Fechar detalhes">${icon('close')}</button></header><div class="drawer-body">${badge(w)}<h3>Direito de uso</h3><dl class="info"><dt>Titular original</dt><dd>${escapeHtml(w.originalOwner)}</dd><dt>Direito de uso atual</dt><dd>${w.state==='available'||w.state==='reserved'?'Banco de semanas':escapeHtml(w.owner)}</dd><dt>Entrada</dt><dd>${full(w.start)} · ${u.kind==='Casa'?'quinta':'sexta'}-feira</dd><dt>Saída</dt><dd>${full(w.end)} · 7 noites</dd><dt>Cota vinculada</dt><dd>CT-${String(w.unit).padStart(3,'0')} · ${u.name}</dd></dl><h3>Situação operacional</h3><dl class="info"><dt>Intenção de uso</dt><dd>${w.state==='waiting'?'Quer trocar':w.state==='use'?'Vai usar':'Não informada'}</dd><dt>Disponibilidade</dt><dd>${w.state==='available'?'Efetivamente disponível':w.state==='reserved'?'Retida para negociação':'Fora do estoque disponível'}</dd><dt>Restrição</dt><dd>${w.state==='blocked'?'Inadimplência':'Nenhuma'}</dd><dt>Tipo de direito</dt><dd>${w.received?'Recebido em troca':w.original?'Semana original':'Estoque do banco'}</dd></dl>${w.received?'<div class="notice">Semana recebida em troca. Não elegível para uma nova troca.</div>':''}${w.state==='waiting'?'<div class="notice amber">Esta semana continua com o titular. Só entra no banco após a confirmação da troca.</div>':''}${w.state==='available'?`<h3>Pedidos compatíveis (${matches.length})</h3>${matches.length?matches.map((r,i)=>`<div class="option"><div><strong>${i+1}º · ${r.owner}</strong><p>Solicitado em ${full(r.created)} · ${r.id}</p></div><button class="link" data-request="${r.id}">Ver pedido</button></div>`).join(''):'<p class="muted small">Nenhum pedido aberto para esta semana.</p>'}`:''}<h3>Histórico recente</h3><div class="timeline">${w.history.length?w.history.map(h=>`<p><time>29/09/2026 · Paula Silva</time>${h}</p>`).join(''):'<p><time>10/09/2026 · Importação de demonstração</time>Semana cadastrada na base inicial.</p>'}</div></div><footer class="drawer-foot"><button data-action="close">Fechar</button>${r?`<button class="primary" data-request="${r.id}">Abrir pedido ${icon('right')}</button>`:eligible?`<button class="primary" data-origin="${id}">Criar pedido ${icon('plus')}</button>`:w.state==='available'?'<button class="primary" data-nav="requests">Consultar pedidos</button>':''}</footer>`)}
 function renderBank(){renderCalendar()}
 function renderRequests(){const list=[...requests].sort((a,b)=>a.created.localeCompare(b.created));$('#app').innerHTML=heading('Pedidos de troca','Prioridade pela data da solicitação original do titular.')+`<section class="surface"><div class="toolbar"><strong>${list.filter(r=>r.status!=='Concluído').length} pedidos abertos</strong><span class="muted small">A falta de resposta não altera a prioridade.</span></div><div class="table-wrap"><table><thead><tr><th>Pedido / titular</th><th>Solicitação original</th><th>Semana de origem</th><th>Procura</th><th>Situação</th><th></th></tr></thead><tbody>${list.map(r=>`<tr><td><strong>${escapeHtml(r.owner)}</strong><p>${r.id}</p></td><td>${full(r.created)}</td><td>${range(getWeek(r.origin))}<p>${getUnit(getWeek(r.origin)).name}</p></td><td>${r.desired.map(d=>full(d)).join('<br>')}<p>Check-in das opções desejadas</p></td><td><span class="badge ${r.status==='Concluído'?'available':r.expired?'waiting':r.target?'reserved':'use'}">${r.status==='Aberto'?(options(r).length?`${options(r).length} opção disponível`:'Aguardando oportunidade'):r.status}</span></td><td><button data-request="${r.id}">Abrir ${icon('right')}</button></td></tr>`).join('')}</tbody></table></div></section>`}
 function renderOwners(){const owners=[...new Set(weeks.map(w=>w.originalOwner))];$('#app').innerHTML=heading('Proprietários','Titulares, cotas vinculadas e semanas de uso.')+`<section class="surface"><table><thead><tr><th>Titular</th><th>Cota / unidade</th><th>Pedidos abertos</th><th></th></tr></thead><tbody>${owners.map(name=>{const w=weeks.find(w=>w.originalOwner===name);return `<tr><td><strong>${name}</strong></td><td>CT-${String(w.unit).padStart(3,'0')} · ${getUnit(w).name}</td><td>${requests.filter(r=>r.owner===name&&r.status!=='Concluído').length}</td><td><button data-owner="${escapeHtml(name)}">Ver semanas</button></td></tr>`}).join('')}</tbody></table></section>`}
 let selectedOrigin='';
-function renderNew(){const eligible=weeks.filter(w=>w.original&&!w.traded&&w.state!=='blocked'&&!['available','reserved'].includes(w.state)&&!requests.some(r=>r.origin===w.id&&r.status!=='Concluído'));$('#app').innerHTML=`<button class="ghost back" data-nav="calendar">${icon('left')} Voltar ao calendário</button>`+heading('Novo pedido de troca','A semana original permanece com o titular até a confirmação.',false)+`<form id="new-form" class="surface new-form"><div class="section"><h2>1. Titular e semana original</h2><div class="form-grid"><label class="form-label wide">Selecione uma semana elegível<select name="origin" required><option value="">Selecionar titular e semana</option>${eligible.map(w=>`<option value="${w.id}" ${selectedOrigin===w.id?'selected':''}>${w.owner} · ${getUnit(w).name} · ${range(w)}</option>`).join('')}</select></label><label class="form-label">Data do pedido original<input type="date" name="created" max="2026-09-29" required value="2026-09-29"></label><div class="muted small" style="align-self:center;line-height:1.7">Esta data define a prioridade na fila, mesmo quando o cadastro é feito depois.</div></div></div><div class="section"><h2>2. Semanas desejadas</h2><p class="muted small" style="margin-top:10px">Informe entradas exatas. Quinta-feira para casas ou sexta-feira para flats; saída após sete noites.</p><div id="alternatives"><div class="form-grid"><label class="form-label">Primeira opção · check-in<input type="date" name="desired" required value="2027-04-16"></label></div></div><button type="button" data-action="alternative">${icon('plus')} Adicionar alternativa</button><label class="form-label" style="margin-top:22px">Observações<textarea name="notes" rows="3" placeholder="Informações úteis para o atendimento"></textarea></label></div><div class="footer-actions"><button type="button" data-nav="calendar">Cancelar</button><button class="primary" type="submit">Criar pedido e buscar opções ${icon('right')}</button></div></form>`}
+function renderNew(){const eligible=weeks.filter(w=>w.original&&!w.traded&&w.state!=='blocked'&&!['available','reserved'].includes(w.state)&&!requests.some(r=>r.origin===w.id&&r.status!=='Concluído'));$('#app').innerHTML=`<button class="ghost back" data-nav="calendar">${icon('left')} Voltar ao calendário</button>`+heading('Novo pedido de troca','A semana original permanece com o titular até a confirmação.',false)+`<form id="new-form" class="surface new-form" autocomplete="off"><div class="section"><h2>1. Titular e semana original</h2><div class="form-grid"><label class="form-label wide">Selecione uma semana elegível<select name="origin" required><option value="">Selecionar titular e semana</option>${eligible.map(w=>`<option value="${w.id}" ${selectedOrigin===w.id?'selected':''}>${w.owner} · ${getUnit(w).name} · ${range(w)}</option>`).join('')}</select></label><label class="form-label">Data do pedido original<input type="date" name="created" max="2026-09-29" required value="2026-09-29"></label><div class="muted small" style="align-self:center;line-height:1.7">Esta data define a prioridade na fila, mesmo quando o cadastro é feito depois.</div></div></div><div class="section"><h2>2. Semanas desejadas</h2><p class="muted small" style="margin-top:10px">Informe entradas exatas. Quinta-feira para casas ou sexta-feira para flats; saída após sete noites.</p><div id="alternatives"><div class="form-grid"><label class="form-label">Primeira opção · check-in<input type="date" name="desired" required value="2027-04-16"></label></div></div><button type="button" data-action="alternative">${icon('plus')} Adicionar alternativa</button><label class="form-label" style="margin-top:22px">Observações<textarea name="notes" rows="3" placeholder="Informações úteis para o atendimento…"></textarea></label></div><div class="footer-actions"><button type="button" data-nav="calendar">Cancelar</button><button class="primary" type="submit">Criar pedido e buscar opções ${icon('right')}</button></div></form>`}
 function openRequest(id){if(view!=='negotiation')exchangeReturnView=['dashboard','calendar','bank','requests'].includes(view)?view:'requests';activeRequest=id;showView('negotiation')}
 function renderExchangePanel(w,role,r,done){
   const u=getUnit(w),originPanel=role==='origin';
@@ -581,7 +705,7 @@ function confirmExchange(){
 }
 function openObservationDialog(){
   const r=requests.find(item=>item.id===activeRequest);if(!r||r.status==='Concluído')return;
-  openLayer(`<h2 id="layer-title">Adicionar observação</h2><p>O registro ficará salvo somente na memória desta demonstração, com autor e data.</p><label class="observation-field">Observação<textarea id="observation-text" rows="4" maxlength="500" placeholder="Escreva uma informação útil para o atendimento"></textarea></label><div class="actions"><button data-action="close">Voltar</button><button class="primary" data-action="observation-save" disabled>Adicionar observação</button></div>`,true);
+  openLayer(`<h2 id="layer-title">Adicionar observação</h2><p>O registro ficará salvo somente na memória desta demonstração, com autor e data.</p><label class="observation-field">Observação<textarea id="observation-text" name="observation" rows="4" maxlength="500" autocomplete="off" placeholder="Escreva uma informação útil para o atendimento…"></textarea></label><div class="actions"><button data-action="close">Voltar</button><button class="primary" data-action="observation-save" disabled>Adicionar observação</button></div>`,true);
 }
 function saveObservation(){
   const r=requests.find(item=>item.id===activeRequest),field=$('#observation-text'),text=field?.value.trim();if(!r||r.status==='Concluído'||!text)return;
@@ -617,6 +741,8 @@ document.addEventListener('click',e=>{
   if(b.dataset.origin){selectedOrigin=b.dataset.origin;showView('new');return}
   if(b.dataset.owner){const list=weeks.filter(w=>w.originalOwner===b.dataset.owner||w.owner===b.dataset.owner);openLayer(`<header class="drawer-head"><h2 id="layer-title">${escapeHtml(b.dataset.owner)}</h2><button data-action="close" aria-label="Fechar">${icon('close')}</button></header><div class="drawer-body"><p class="muted small">Semanas ilustrativas para validação do layout.</p>${list.map(w=>`<div class="option"><div><strong>${range(w)}</strong><p>${getUnit(w).name} · ${labels[w.state]}</p></div><button data-week="${w.id}">Ver</button></div>`).join('')}</div>`);return}
   const action=b.dataset.action;
+  if(action==='mobile-nav-open')setMobileNavigation(true);
+  if(action==='mobile-nav-close')setMobileNavigation(false);
   if(action==='close')closeLayer();
   if(action==='new'){selectedOrigin='';showView('new')}
   if(action==='prev'||action==='next'){const d=new Date(Date.UTC(year,month+(action==='next'?1:-1),1));month=d.getUTCMonth();year=d.getUTCFullYear();renderGrid()}
@@ -657,7 +783,20 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{if(e.target.id==='calendar-search'){filters.q=e.target.value;renderGrid()}if(e.target.id==='dashboard-search'){dashboardQuery=e.target.value;renderDashboardColumns()}});
 document.addEventListener('input',e=>{if(e.target.id==='observation-text'){const save=$('[data-action=observation-save]');if(save)save.disabled=!e.target.value.trim()}});
 document.addEventListener('submit',e=>{if(e.target.id!=='new-form')return;e.preventDefault();const f=new FormData(e.target),o=getWeek(f.get('origin')),desired=[...new Set(f.getAll('desired').filter(Boolean))];if(desired.some(s=>![4,5].includes(date(s).getUTCDay()))){toast('Escolha uma quinta-feira (casa) ou sexta-feira (flat).');return}const id=`TR-${String(89+requests.length-3).padStart(4,'0')}`;requests.push({id,owner:o.owner,origin:o.id,desired,created:f.get('created'),notes:f.get('notes'),status:'Aberto',target:null,contact:false,evidence:''});o.state='waiting';o.history.push(`Pedido ${id} registrado; direito de uso preservado.`);openRequest(id);toast('Pedido criado com a data original de prioridade.')});
-document.addEventListener('keydown',e=>{const dialog=$('#layers [role=dialog]');if(!dialog){if(e.key==='Escape'&&calendarFocus)setCalendarFocus(false);return}if(e.key==='Escape'){closeLayer();return}if(e.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not(:disabled),a,input:not(:disabled),select,textarea,[tabindex="0"]')];if(!focusable.length){e.preventDefault();return}const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===dialog)){e.preventDefault();last.focus()}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===dialog)){e.preventDefault();first.focus()}}});
+document.addEventListener('keydown',e=>{
+  const dialog=$('#layers [role=dialog]');
+  if(dialog){
+    if(e.key==='Escape'){e.preventDefault();closeLayer();return}
+    if(e.key==='Tab'){const focusable=focusableElements(dialog);if(!focusable.length){e.preventDefault();dialog.focus();return}const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===dialog)){e.preventDefault();last.focus()}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===dialog)){e.preventDefault();first.focus()}}
+    return;
+  }
+  if(sidebarOpen&&mobileNavigationQuery.matches){
+    if(e.key==='Escape'){e.preventDefault();setMobileNavigation(false);return}
+    if(e.key==='Tab'){const sidebar=$('#sidebar'),focusable=focusableElements(sidebar),first=focusable[0],last=focusable.at(-1);if(!first){e.preventDefault();return}if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}
+    return;
+  }
+  if(e.key==='Escape'&&calendarFocus)setCalendarFocus(false);
+});
 function openVisualExplorer(){
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   openLayer(`<header class="drawer-head"><div><h2 id="layer-title">Ícones e movimento</h2><p>Compare as opções diretamente nesta prévia.</p></div><button class="ghost square" data-action="close" aria-label="Fechar exploração">${icon('close')}</button></header>
@@ -690,6 +829,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{if(e.target.id==='motion-toggle')document.body.dataset.motion=e.target.checked?'on':'off';if(e.target.id==='type-filter'){filters.type=e.target.value;renderGrid()}});
 $('.nav-footer').insertAdjacentHTML('afterbegin',`<button class="explore-trigger" data-visual-action="open" aria-label="Explorar ícones e movimento">${icon('sliders')}<span>Ícones e movimento</span></button>`);
+syncResponsiveNavigation();
 render();
 </script>
 <!--
