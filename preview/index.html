@@ -104,6 +104,43 @@ main{margin-left:252px}.topbar{background:#fff}.content{max-width:1720px}
 @media(max-width:1250px){.sidebar{width:220px}.brand-logo{width:126px}main{margin-left:220px}.dashboard-columns{grid-template-columns:1fr}.dashboard-list{max-height:330px}}
 @media(max-width:800px){.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-tools{align-items:flex-start;flex-direction:column}.dashboard-tools .search{width:100%}}
 @media(max-width:700px){.sidebar{width:68px;padding:20px 7px}.brand{padding:0 4px 20px}.brand-logo{width:52px}.workspace,.nav button span,.profile{display:none}.nav button{justify-content:center;padding:11px 6px}.nav-footer{display:block}.explore-trigger{justify-content:center;padding:10px 6px}.explore-trigger span{display:none}main{margin-left:68px}.metric-card{padding:16px}.metric-card strong{font-size:27px}.metric-card span{font-size:13px}.dashboard-columns{gap:12px}.dashboard-list{max-height:none}.dashboard-panel-head,.dashboard-row{padding-left:15px;padding-right:15px}}
+/* Apple-inspired calendar modes. Status colors reuse the existing operational
+   palette; no brand color is inferred here. */
+.operational-calendar{overflow:hidden}
+.calendar-commandbar{display:grid;grid-template-columns:auto minmax(180px,1fr) auto auto;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.calendar-navigation{display:flex;align-items:center;gap:8px}.calendar-navigation button{white-space:nowrap}
+.calendar-period-title{font-size:22px;text-align:center;min-width:0}
+.calendar-segmented{display:flex;border:1px solid #d9d7d1;border-radius:7px;overflow:hidden;background:#fff}
+.calendar-segmented button{min-height:40px;border:0;border-right:1px solid #d9d7d1;border-radius:0;padding:8px 15px}
+.calendar-segmented button:last-child{border-right:0}.calendar-segmented button[aria-pressed=true]{background:#1d1d1b;color:#fff}
+.calendar-filters{display:grid;grid-template-columns:repeat(3,minmax(150px,190px)) minmax(220px,1fr);gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.calendar-filters .search{min-width:0}.calendar-filters select,.calendar-filters input{width:100%}
+.calendar-context{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted)}
+.calendar-stage{overflow:auto;background:#fff;min-height:420px;max-height:690px}
+.calendar-empty{min-height:360px;display:grid;place-items:center;padding:32px;text-align:center;color:var(--muted)}
+.calendar-focus .operational-calendar{height:100%}.calendar-focus .calendar-stage{flex:1;max-height:none;min-height:0}.calendar-focus .calendar-commandbar,.calendar-focus .calendar-filters,.calendar-focus .calendar-context{flex-shrink:0}
+.calendar-focus .calendar-commandbar{grid-template-columns:auto auto minmax(180px,1fr) auto auto}.calendar-focus .calendar-focus-title{display:flex;margin:0;font-size:18px}
+.year-grid{display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:1px;background:var(--line)}
+.mini-month{background:#fff;padding:16px;min-width:0}.mini-month-header{width:100%;justify-content:flex-start;border:0;min-height:36px;padding:4px 2px;margin-bottom:5px;font-size:16px;font-weight:700;text-transform:capitalize}
+.mini-weekdays,.mini-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}.mini-weekdays span{font-size:11px;color:var(--muted);text-align:center;padding:3px 0}
+.year-day{position:relative;border:0;border-radius:4px;min-height:31px;padding:3px 1px;font-size:12px;background:#fff}.year-day.outside{visibility:hidden}.year-day.has-items{font-weight:700}.year-day.is-selected,.month-day-number.is-selected,.week-day.is-selected .week-day-header{outline:2px solid #1d1d1b;outline-offset:-2px}
+.year-markers{position:absolute;left:50%;bottom:3px;display:flex;gap:2px;transform:translateX(-50%)}.year-marker{width:4px;height:4px;border-radius:50%;background:#8a8882}.year-marker.available{background:#4c9d78}.year-marker.use{background:#8a9bb6}.year-marker.waiting{background:#d4ab4f}.year-marker.reserved{background:#9e80cf}.year-marker.blocked{background:#cf7c88}.year-marker.noanswer{background:#c2c6cc}
+.month-calendar{min-width:720px}.month-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));position:sticky;top:0;z-index:5;background:#f7f6f2;border-bottom:1px solid var(--line)}
+.month-weekdays span{padding:10px 8px;text-align:right;color:var(--muted);font-size:12px;font-weight:700}
+.month-week{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:32px repeat(3,30px) 28px;min-height:151px}
+.month-day{grid-row:1/-1;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff;min-width:0}.month-day:last-of-type{border-right:0}.month-day.outside{background:#f8f7f4}
+.month-day-number{position:relative;z-index:2;min-width:32px;min-height:30px;border:0;background:transparent;padding:4px 7px;margin:1px;float:right;font-size:13px}.month-day.outside .month-day-number{color:#9a9892}
+.month-event{position:relative;z-index:3;align-self:center;justify-content:flex-start;min-height:26px;height:26px;padding:3px 7px;margin:0 2px;border:0;border-left:3px solid currentColor;border-radius:4px;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.month-event.continues-before{border-radius:0 4px 4px 0;margin-left:0}.month-event.continues-after{border-radius:4px 0 0 4px;margin-right:0}.month-event.continues-before.continues-after{border-radius:0}
+.month-event:hover{outline:1px solid currentColor;filter:brightness(.98)}.month-event-text{overflow:hidden;text-overflow:ellipsis}
+.month-overflow{position:relative;z-index:3;grid-column:6/8;grid-row:5;align-self:center;justify-self:end;min-height:25px;padding:2px 8px;margin-right:4px;border:0;background:#fff;font-size:12px;font-weight:700}
+.calendar-overflow-list{margin-top:20px;border-top:1px solid var(--line)}.calendar-overflow-item{width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;justify-content:space-between;text-align:left;padding:13px 4px;min-height:0}.calendar-overflow-item span{color:var(--muted);font-size:13px}
+.week-agenda{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));min-width:1050px;min-height:440px}.week-day{border-right:1px solid var(--line);min-width:0}.week-day:last-child{border-right:0}
+.week-day-header{position:sticky;top:0;z-index:2;background:#f7f6f2;border-bottom:1px solid var(--line);padding:12px;text-align:left}.week-day-header strong{display:block;font-size:16px;text-transform:capitalize}.week-day-header span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.week-day-items{display:flex;flex-direction:column;gap:8px;padding:10px}.week-empty{color:#8a8882;font-size:12px;padding:6px 2px}
+.week-item{display:block;text-align:left;min-height:0;padding:10px;border-radius:5px;border:0;border-left:3px solid currentColor;white-space:normal}.week-item strong,.week-item span{display:block}.week-item strong{font-size:13px;line-height:1.35}.week-item span{font-size:12px;line-height:1.4;margin-top:5px}.week-item:hover{outline:1px solid currentColor;filter:brightness(.98)}
+@media(max-width:1100px){.calendar-commandbar{grid-template-columns:auto minmax(170px,1fr) auto}.calendar-commandbar .focus-toggle{grid-column:1/-1;justify-self:end}.calendar-filters{grid-template-columns:repeat(3,1fr)}.calendar-filters .search{grid-column:1/-1}.year-grid{grid-template-columns:repeat(2,minmax(210px,1fr))}}
+@media(max-width:700px){.calendar-commandbar{grid-template-columns:1fr auto;padding:12px;gap:9px}.calendar-navigation{grid-column:1/-1}.calendar-navigation button:nth-child(2){flex:1}.calendar-period-title{grid-column:1/-1;grid-row:2;text-align:left;font-size:19px}.calendar-segmented{grid-column:1/-1;grid-row:3}.calendar-segmented button{flex:1;padding:7px;min-height:42px}.calendar-commandbar .focus-toggle{grid-column:1/-1;grid-row:4;width:100%}.calendar-filters{grid-template-columns:1fr;padding:12px;gap:8px}.calendar-filters select{min-width:0}.calendar-filters .search{grid-column:1}.calendar-context{align-items:flex-start;padding:9px 12px;font-size:12px}.calendar-context span:last-child{display:none}.calendar-stage{min-height:420px;max-height:none}.year-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1px}.mini-month{padding:8px 6px}.mini-month-header{font-size:13px;min-height:30px;margin:0}.mini-weekdays,.mini-days{gap:0}.mini-weekdays span{font-size:9px}.year-day{min-height:25px;font-size:10px;padding:1px}.year-marker{width:3px;height:3px}.month-calendar{min-width:0}.month-weekdays span{font-size:10px;padding:7px 2px;text-align:center}.month-week{grid-template-rows:28px repeat(3,14px) 24px;min-height:95px}.month-day-number{min-width:25px;min-height:25px;font-size:11px;padding:2px 4px}.month-event{min-height:7px;height:7px;padding:0;margin:1px;border-left-width:2px}.month-event-text{display:none}.month-overflow{min-height:20px;padding:0 3px;margin-right:2px;font-size:10px}.week-agenda{display:flex;flex-direction:column;min-width:0}.week-day{border-right:0;border-bottom:1px solid var(--line)}.week-day-header{position:static;display:flex;align-items:baseline;justify-content:space-between;padding:11px 12px}.week-day-header strong{font-size:15px}.week-day-header span{margin:0}.week-day-items{padding:9px 12px}.calendar-focus .calendar-commandbar{display:grid;grid-template-columns:1fr}.calendar-focus .calendar-focus-title{display:none}.calendar-focus .calendar-filters{display:grid}.calendar-focus .calendar-context{display:flex}}
 </style>
 </head>
 <body>
@@ -152,8 +189,10 @@ let requests=[{id:'TR-0087',owner:'João Pedro',origin:origin.id,desired:[target
 // The seeded reservation is the only negotiated inventory item in this preview.
 weeks.filter(w=>w.state==='reserved'&&w.id!==expiredTarget.id).forEach(w=>w.state='use');
 weeks.filter(w=>w.state==='waiting'&&!requests.some(r=>r.origin===w.id)).forEach(w=>w.state='noanswer');
-let view='dashboard',month=3,year=2027,filters={kind:'',state:'',q:'',only:false},activeRequest=null,returnFocus=null,dashboardQuery='';
+let view='dashboard',month=3,year=2027,filters={kind:'',type:'',state:'',q:'',only:false},activeRequest=null,returnFocus=null,dashboardQuery='';
 const filtersByView={calendar:filters,bank:{kind:'',unit:'',type:'',q:'',state:'',only:true}};
+const DEMO_TODAY='2026-09-29';
+let calendarView='month',calendarDate='2027-04-15',calendarOverflow={};
 const $=s=>document.querySelector(s),getWeek=id=>weeks.find(w=>w.id===id),getUnit=w=>units.find(u=>u.id===w.unit),badge=w=>`<span class="badge ${w.state}">${labels[w.state]}</span>`;
 const options=r=>weeks.filter(w=>w.state==='available'&&r.desired.includes(w.start));
 const compatible=w=>requests.filter(r=>!['Concluído','Em negociação','Prazo vencido'].includes(r.status)&&r.desired.includes(w.start)).sort((a,b)=>a.created.localeCompare(b.created));
@@ -209,7 +248,113 @@ function renderDashboard(){
     </div>`;
   renderDashboardColumns();
 }
+const calendarModes=['year','month','week'];
+const monthName=(monthIndex,style='long')=>new Date(Date.UTC(2027,monthIndex,1)).toLocaleDateString('pt-BR',{month:style,timeZone:'UTC'}).replace('.','');
+const weekdayName=s=>date(s).toLocaleDateString('pt-BR',{weekday:'short',timeZone:'UTC'}).replace('.','');
+const mondayOf=s=>add(s,-((date(s).getUTCDay()+6)%7));
+const calendarPerson=w=>w.state==='reserved'?`Reserva · ${requests.find(r=>r.target===w.id)?.owner||'Banco'}`:w.state==='available'?'Banco':w.owner;
+function filteredCalendarWeeks(){
+  const query=filters.q.trim().toLocaleLowerCase('pt-BR');
+  return weeks.filter(w=>{
+    const u=getUnit(w),haystack=`${w.id} ${u.name} ${u.kind} ${u.type} ${w.owner} ${w.originalOwner} ${labels[w.state]} ${range(w)}`.toLocaleLowerCase('pt-BR');
+    return (!filters.kind||u.kind===filters.kind)&&(!filters.type||u.type===filters.type)&&(!filters.state||w.state===filters.state)&&(!filters.only||w.state==='available')&&(!query||haystack.includes(query));
+  }).sort((a,b)=>a.start.localeCompare(b.start)||a.unit-b.unit||a.id.localeCompare(b.id));
+}
+function calendarPeriodTitle(){
+  const d=date(calendarDate),calendarYear=d.getUTCFullYear(),calendarMonth=d.getUTCMonth();
+  if(calendarView==='year')return String(calendarYear);
+  if(calendarView==='month')return `${monthName(calendarMonth)} de ${calendarYear}`;
+  const start=mondayOf(calendarDate),end=add(start,6),a=date(start),b=date(end);
+  if(a.getUTCFullYear()===b.getUTCFullYear()&&a.getUTCMonth()===b.getUTCMonth())return `${a.getUTCDate()} — ${b.getUTCDate()} ${monthName(a.getUTCMonth(),'short')} ${a.getUTCFullYear()}`;
+  const compact=value=>{const current=date(value);return `${current.getUTCDate()} ${monthName(current.getUTCMonth(),'short')}`};
+  if(a.getUTCFullYear()===b.getUTCFullYear())return `${compact(start)} — ${compact(end)} ${a.getUTCFullYear()}`;
+  return `${compact(start)} ${a.getUTCFullYear()} — ${compact(end)} ${b.getUTCFullYear()}`;
+}
+function renderOperationalCalendar(){
+  $('#app').innerHTML=heading('Calendário de semanas','Visualize o ano, o mês ou a agenda semanal sem perder o contexto operacional.')+`
+    <section class="surface operational-calendar" data-calendar-view="${calendarView}">
+      <header class="calendar-commandbar">
+        <div class="calendar-focus-title">${icon('calendar')} Calendário de semanas</div>
+        <div class="calendar-navigation"><button class="square" data-action="calendar-prev" aria-label="Período anterior">${icon('left')}</button><button data-action="calendar-today">Hoje</button><button class="square" data-action="calendar-next" aria-label="Próximo período">${icon('right')}</button></div>
+        <h2 class="calendar-period-title" id="calendar-period-title" aria-live="polite"></h2>
+        <div class="calendar-segmented" role="group" aria-label="Visualização do calendário">${[['year','Ano'],['month','Mês'],['week','Semana']].map(([mode,label])=>`<button data-calendar-view="${mode}" aria-pressed="${calendarView===mode}">${label}</button>`).join('')}</div>
+        <button class="focus-toggle" data-calendar-focus aria-pressed="${calendarFocus}">${icon(calendarFocus?'collapse':'expand')} ${calendarFocus?'Voltar à visão normal':'Ampliar calendário'}</button>
+      </header>
+      <div class="calendar-filters">
+        <select id="kind-filter" aria-label="Tipo de acomodação"><option value="">Todos</option><option value="Casa">Casas</option><option value="Flat">Flats</option></select>
+        <select id="type-filter" aria-label="Tipologia"><option value="">Todas as tipologias</option>${[...new Set(units.map(u=>u.type))].sort().map(t=>`<option value="${t}">Tipologia ${t}</option>`).join('')}</select>
+        <select id="state-filter" aria-label="Situação"><option value="">Todas as situações</option>${Object.entries(labels).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select>
+        <label class="search">${icon('search')}<input class="field" id="calendar-search" type="search" aria-label="Buscar unidade, titular ou semana" placeholder="Buscar unidade, titular ou código" value="${escapeHtml(filters.q)}"></label>
+      </div>
+      <div class="calendar-context"><span id="visible-count"></span><span>Casas: quinta–quinta · Flats: sexta–sexta · 7 noites</span></div>
+      <div class="calendar-stage" id="calendar-grid" tabindex="0" role="region" aria-label="Conteúdo do calendário"></div>
+    </section><div class="bottom-note"><span>Selecione uma semana para consultar os detalhes.</span><span>A data e os filtros são preservados entre as visualizações.</span></div>`;
+  $('#kind-filter').value=filters.kind;$('#type-filter').value=filters.type;$('#state-filter').value=filters.state;
+  renderOperationalGrid();
+}
+function renderYearCalendar(records){
+  const selectedYear=date(calendarDate).getUTCFullYear(),weekdays=['S','T','Q','Q','S','S','D'];
+  const yearRecords=records.filter(w=>date(w.start).getUTCFullYear()===selectedYear);
+  const months=Array.from({length:12},(_,monthIndex)=>{
+    const first=`${selectedYear}-${String(monthIndex+1).padStart(2,'0')}-01`,leading=(date(first).getUTCDay()+6)%7,count=new Date(Date.UTC(selectedYear,monthIndex+1,0)).getUTCDate();
+    const cells=Array.from({length:leading+count},(_,index)=>{
+      if(index<leading)return '<span class="year-day outside" aria-hidden="true"></span>';
+      const day=index-leading+1,current=`${selectedYear}-${String(monthIndex+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,items=yearRecords.filter(w=>w.start===current),states=[...new Set(items.map(w=>w.state))].slice(0,3);
+      const itemText=items.length?`, ${items.length} ${items.length===1?'semana':'semanas'}: ${states.map(state=>labels[state]).join(', ')}`:'';
+      return `<button class="year-day ${items.length?'has-items':''} ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="${escapeHtml(`${full(current)}${itemText}. Abrir semana.`)}"><span>${day}</span>${states.length?`<span class="year-markers" aria-hidden="true">${states.map(state=>`<i class="year-marker ${state}"></i>`).join('')}</span>`:''}</button>`;
+    }).join('');
+    return `<section class="mini-month"><button class="mini-month-header" data-calendar-month="${first}" aria-label="Abrir ${monthName(monthIndex)} de ${selectedYear} na visualização mensal">${monthName(monthIndex)}</button><div class="mini-weekdays" aria-hidden="true">${weekdays.map(day=>`<span>${day}</span>`).join('')}</div><div class="mini-days">${cells}</div></section>`;
+  }).join('');
+  return {html:`<div class="year-grid" data-calendar-render="year">${months}</div>`,count:yearRecords.length};
+}
+function renderMonthCalendar(records){
+  const context=date(calendarDate),calendarYear=context.getUTCFullYear(),calendarMonth=context.getUTCMonth(),monthStart=`${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}-01`,monthEnd=iso(new Date(Date.UTC(calendarYear,calendarMonth+1,1))),gridStart=mondayOf(monthStart),lastDay=add(monthEnd,-1),gridEnd=add(lastDay,7-((date(lastDay).getUTCDay()+6)%7));
+  const monthRecords=records.filter(w=>w.start<monthEnd&&w.end>monthStart);calendarOverflow={};
+  const weekdays=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];let rows='';
+  for(let rowStart=gridStart;rowStart<gridEnd;rowStart=add(rowStart,7)){
+    const rowEnd=add(rowStart,7),rowItems=records.filter(w=>w.start<rowEnd&&w.end>rowStart),shown=rowItems.slice(0,3),hidden=rowItems.slice(3),key=rowStart;
+    const days=Array.from({length:7},(_,index)=>{const current=add(rowStart,index),outside=date(current).getUTCMonth()!==calendarMonth;return `<div class="month-day ${outside?'outside':''}" style="grid-column:${index+1};grid-row:1/-1"><button class="month-day-number ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="Abrir semana de ${full(current)}">${date(current).getUTCDate()}</button></div>`}).join('');
+    const items=shown.map((w,index)=>{const segmentStart=w.start>rowStart?w.start:rowStart,segmentEnd=w.end<rowEnd?w.end:rowEnd,startColumn=Math.round((date(segmentStart)-date(rowStart))/86400000)+1,span=Math.max(1,Math.round((date(segmentEnd)-date(segmentStart))/86400000)),u=getUnit(w),label=`${u.name} · ${labels[w.state]}`;return `<button class="month-event ${w.state} ${w.start<rowStart?'continues-before':''} ${w.end>rowEnd?'continues-after':''}" data-week="${w.id}" style="grid-column:${startColumn}/span ${span};grid-row:${index+2}" title="${escapeHtml(`${label} · ${range(w)}`)}" aria-label="${escapeHtml(`${label}, ${range(w)}, ${calendarPerson(w)}`)}"><span class="month-event-text">${escapeHtml(label)}</span></button>`}).join('');
+    if(hidden.length)calendarOverflow[key]={title:`${short(rowStart)} — ${short(add(rowEnd,-1))}`,ids:hidden.map(w=>w.id)};
+    rows+=`<div class="month-week">${days}${items}${hidden.length?`<button class="month-overflow" data-calendar-overflow="${key}" aria-label="Mostrar mais ${hidden.length} itens de ${short(rowStart)} a ${short(add(rowEnd,-1))}">+${hidden.length} itens</button>`:''}</div>`;
+  }
+  return {html:`<div class="month-calendar" data-calendar-render="month"><div class="month-weekdays" aria-hidden="true">${weekdays.map(day=>`<span>${day}</span>`).join('')}</div>${rows}</div>`,count:monthRecords.length};
+}
+function renderWeekCalendar(records){
+  const weekStart=mondayOf(calendarDate),weekEnd=add(weekStart,7),weekRecords=records.filter(w=>w.start>=weekStart&&w.start<weekEnd);
+  const days=Array.from({length:7},(_,index)=>{const current=add(weekStart,index),items=weekRecords.filter(w=>w.start===current);return `<section class="week-day ${current===calendarDate?'is-selected':''}"><header class="week-day-header"><strong>${weekdayName(current)}</strong><span>${short(current)}</span></header><div class="week-day-items">${items.length?items.map(w=>{const u=getUnit(w);return `<button class="week-item ${w.state}" data-week="${w.id}" aria-label="${escapeHtml(`${u.name}, ${range(w)}, ${labels[w.state]}`)}"><strong>${u.name} · ${labels[w.state]}</strong><span>${range(w)}</span><span>${escapeHtml(calendarPerson(w))}</span></button>`}).join(''):'<p class="week-empty">Sem movimentações.</p>'}</div></section>`}).join('');
+  return {html:`<div class="week-agenda" data-calendar-render="week">${days}</div>`,count:weekRecords.length};
+}
+function renderOperationalGrid(){
+  if(view!=='calendar')return;
+  const records=filteredCalendarWeeks(),result=calendarView==='year'?renderYearCalendar(records):calendarView==='week'?renderWeekCalendar(records):renderMonthCalendar(records);
+  const root=$('.operational-calendar');if(root)root.dataset.calendarView=calendarView;
+  $('#calendar-period-title').textContent=calendarPeriodTitle();
+  document.querySelectorAll('button[data-calendar-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.calendarView===calendarView)));
+  const unit=result.count===1?'semana':'semanas';$('#visible-count').textContent=`${result.count} ${unit} neste período`;
+  $('#calendar-grid').innerHTML=result.count?result.html:`<div class="calendar-empty">Nenhuma semana corresponde aos filtros neste período.</div>`;
+  const modeLabel={year:'Ano',month:'Mês',week:'Semana'}[calendarView];$('[data-action=calendar-prev]').setAttribute('aria-label',`${modeLabel} anterior`);$('[data-action=calendar-next]').setAttribute('aria-label',`Próxim${calendarView==='week'?'a':'o'} ${modeLabel.toLocaleLowerCase('pt-BR')}`);
+}
+function setCalendarView(mode,nextDate=calendarDate){
+  if(!calendarModes.includes(mode))return;calendarView=mode;calendarDate=nextDate;renderOperationalCalendar();
+}
+function moveCalendar(direction){
+  const d=date(calendarDate);
+  if(calendarView==='year'){
+    const day=d.getUTCDate(),targetYear=d.getUTCFullYear()+direction,calendarMonth=d.getUTCMonth();d.setUTCDate(1);d.setUTCFullYear(targetYear);d.setUTCMonth(calendarMonth);d.setUTCDate(Math.min(day,new Date(Date.UTC(targetYear,calendarMonth+1,0)).getUTCDate()));
+  }
+  if(calendarView==='month'){
+    const day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+direction);d.setUTCDate(Math.min(day,new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate()));
+  }
+  if(calendarView==='week')d.setUTCDate(d.getUTCDate()+direction*7);
+  calendarDate=iso(d);renderOperationalGrid();
+}
+function openCalendarOverflow(key){
+  const group=calendarOverflow[key];if(!group)return;
+  openLayer(`<header class="drawer-head"><div><h2 id="layer-title">Mais itens</h2><p>${group.title}</p></div><button class="ghost square" data-action="close" aria-label="Fechar lista">${icon('close')}</button></header><div class="drawer-body"><p class="muted">Semanas ocultas para manter a leitura do mês.</p><div class="calendar-overflow-list">${group.ids.map(id=>{const w=getWeek(id),u=getUnit(w);return `<button class="calendar-overflow-item ${w.state}" data-week="${w.id}"><strong>${u.name} · ${labels[w.state]}</strong><span>${range(w)}</span></button>`}).join('')}</div></div>`);
+}
 function renderCalendar(){
+  if(view==='calendar'){renderOperationalCalendar();return}
   const bank=view==='bank',title=bank?'Banco de semanas':'Calendário de semanas';
   const available=weeks.filter(w=>w.state==='available').length;
   $('#app').innerHTML=heading(title,bank?'Pesquise semanas disponíveis e encontre os pedidos que elas podem atender.':'Todas as semanas, seus titulares e a situação de uso.')+`
@@ -269,6 +414,28 @@ function renderNegotiation(){const r=requests.find(r=>r.id===activeRequest);if(!
 function reserve(id){const r=requests.find(r=>r.id===activeRequest),w=getWeek(id);if(w.state!=='available'||compatible(w)[0]?.id!==r.id){toast('A disponibilidade ou a prioridade mudou. Consulte novamente.');render();return}w.state='reserved';w.history.push(`Reservada para ${r.id}.`);r.target=id;r.status='Em negociação';r.expired=false;renderNegotiation();toast('Semana reservada para este pedido.')}
 function release(){const r=requests.find(r=>r.id===activeRequest);openLayer(`<h2 id="layer-title">Liberar a semana reservada?</h2><p>A semana volta ao banco. O pedido de ${escapeHtml(r.owner)} continua aberto, mantendo a prioridade de ${full(r.created)}.</p><div class="actions"><button data-action="close">Voltar</button><button class="danger" data-action="release-confirm">Liberar reserva</button></div>`,true)}
 function review(){const r=requests.find(r=>r.id===activeRequest),o=getWeek(r.origin),t=getWeek(r.target);if(!r.contact||!r.evidence||t?.state!=='reserved')return;openLayer(`<h2 id="layer-title">Confirmar troca de semanas?</h2><p>Revise a movimentação para <strong>${escapeHtml(r.owner)}</strong>.</p><div class="notice"><strong>Entra no banco</strong><br>${getUnit(o).name} · ${range(o)}<br><br><strong>Passa para ${escapeHtml(r.owner)}</strong><br>${getUnit(t).name} · ${range(t)}</div><p>O aceite de WhatsApp está anexado. A semana recebida não poderá ser trocada novamente.</p><div class="actions"><button data-action="close">Voltar à revisão</button><button class="primary" data-action="confirm">${icon('check')} Confirmar troca</button></div>`,true)}
+document.addEventListener('click',e=>{
+  const button=e.target.closest('button');if(!button||view!=='calendar')return;
+  if(button.dataset.calendarView){e.stopImmediatePropagation();setCalendarView(button.dataset.calendarView);return}
+  if(button.dataset.calendarMonth){e.stopImmediatePropagation();setCalendarView('month',button.dataset.calendarMonth);return}
+  if(button.dataset.calendarDrill&&button.dataset.calendarDate){e.stopImmediatePropagation();setCalendarView(button.dataset.calendarDrill,button.dataset.calendarDate);return}
+  if(button.dataset.calendarOverflow){e.stopImmediatePropagation();openCalendarOverflow(button.dataset.calendarOverflow);return}
+  const action=button.dataset.action;
+  if(action==='calendar-prev'||action==='calendar-next'){e.stopImmediatePropagation();moveCalendar(action==='calendar-next'?1:-1);return}
+  if(action==='calendar-today'){e.stopImmediatePropagation();calendarDate=DEMO_TODAY;renderOperationalGrid()}
+});
+document.addEventListener('change',e=>{
+  if(view!=='calendar'||!['kind-filter','type-filter','state-filter'].includes(e.target.id))return;
+  e.stopImmediatePropagation();
+  if(e.target.id==='kind-filter')filters.kind=e.target.value;
+  if(e.target.id==='type-filter')filters.type=e.target.value;
+  if(e.target.id==='state-filter')filters.state=e.target.value;
+  renderOperationalGrid();
+});
+document.addEventListener('input',e=>{
+  if(view!=='calendar'||e.target.id!=='calendar-search')return;
+  e.stopImmediatePropagation();filters.q=e.target.value;renderOperationalGrid();
+});
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b){if(e.target.dataset.backdrop)closeLayer();return}if(b.dataset.nav){showView(b.dataset.nav);return}if(b.dataset.week){openWeek(b.dataset.week);return}if(b.dataset.request){openRequest(b.dataset.request);return}if(b.dataset.origin){selectedOrigin=b.dataset.origin;showView('new');return}if(b.dataset.reserve){reserve(b.dataset.reserve);return}if(b.dataset.owner){const list=weeks.filter(w=>w.originalOwner===b.dataset.owner||w.owner===b.dataset.owner);openLayer(`<header class="drawer-head"><h2 id="layer-title">${escapeHtml(b.dataset.owner)}</h2><button data-action="close" aria-label="Fechar">${icon('close')}</button></header><div class="drawer-body"><p class="muted small">Semanas ilustrativas para validação do layout.</p>${list.map(w=>`<div class="option"><div><strong>${range(w)}</strong><p>${getUnit(w).name} · ${labels[w.state]}</p></div><button data-week="${w.id}">Ver</button></div>`).join('')}</div>`);return}const a=b.dataset.action,r=requests.find(r=>r.id===activeRequest);if(a==='close')closeLayer();if(a==='new'){selectedOrigin='';showView('new')}if(a==='prev'||a==='next'){const d=new Date(Date.UTC(year,month+(a==='next'?1:-1),1));month=d.getUTCMonth();year=d.getUTCFullYear();renderGrid()}if(a==='reset-month'){month=3;year=2027;renderGrid()}if(a==='alternative')$('#alternatives').insertAdjacentHTML('beforeend','<div class="form-grid"><label class="form-label">Alternativa · check-in<input type="date" name="desired" required></label><button type="button" data-action="remove-alternative" style="align-self:end">Remover alternativa</button></div>');if(a==='remove-alternative')b.parentElement.remove();if(a==='contact'){const days=(date(getWeek(r.origin).start)-date('2026-09-29'))/86400000;if(days<90){toast('A semana original não atende à antecedência de 90 dias.');return}r.contact=true;renderNegotiation();toast('Contato registrado. Antecedência de 90 dias verificada.')}if(a==='release')release();if(a==='release-confirm'){const w=getWeek(r.target);w.state='available';w.history.push(`Reserva de ${r.id} liberada manualmente.`);r.target=null;r.status='Aberto';r.contact=false;r.evidence='';r.expired=false;closeLayer();renderNegotiation();toast('Reserva liberada. Prioridade do pedido preservada.')}if(a==='review')review();if(a==='confirm'){const o=getWeek(r.origin),t=getWeek(r.target);if(!r.evidence||!r.contact||t?.state!=='reserved'||o.state==='blocked'||o.traded){closeLayer();toast('As condições da troca mudaram. Revise o pedido.');return}o.state='available';o.original=false;o.traded=true;o.history.push(`Entrou no banco pela troca ${r.id}.`);t.state='use';t.owner=r.owner;t.received=true;t.original=false;t.history.push(`Direito de uso atribuído a ${escapeHtml(r.owner)} por ${r.id}.`);r.status='Concluído';r.expired=false;closeLayer();renderNegotiation();toast('Troca concluída na simulação. Estoque atualizado.')}});
 document.addEventListener('change',e=>{if(e.target.id==='kind-filter'){filters.kind=e.target.value;renderUnitFilter();renderGrid()}if(e.target.id==='unit-filter'){filters.unit=e.target.value;renderGrid()}if(e.target.id==='state-filter'){filters.state=e.target.value;renderGrid()}if(e.target.id==='only-available'){filters.only=e.target.checked;renderGrid()}if(e.target.id==='evidence'){const file=e.target.files[0],r=requests.find(r=>r.id===activeRequest);if(file&&!['image/png','image/jpeg','image/webp','application/pdf'].includes(file.type)){e.target.value='';r.evidence='';toast('Selecione uma imagem PNG, JPEG, WebP ou um PDF.')}else r.evidence=file?.name||'';$('#file-name').textContent=r.evidence||'Nenhum comprovante selecionado.';$('[data-action=review]').disabled=!r.contact||!r.evidence}});
 document.addEventListener('input',e=>{if(e.target.id==='calendar-search'){filters.q=e.target.value;renderGrid()}if(e.target.id==='dashboard-search'){dashboardQuery=e.target.value;renderDashboardColumns()}});
@@ -291,7 +458,8 @@ document.addEventListener('click',e=>{
   if(button.dataset.visualAction==='open'||button.dataset.visualAction==='replay')openVisualExplorer();
   if(button.dataset.iconFamily){
     iconFamily=button.dataset.iconFamily;nav();
-    if(view==='calendar'||view==='bank'){
+    if(view==='calendar')renderOperationalGrid();
+    if(view==='bank'){
       const scroll=$('.scroll'),left=scroll.scrollLeft,top=scroll.scrollTop;
       renderGrid();scroll.scrollLeft=left;scroll.scrollTop=top;
       $('.legend').innerHTML=calendarLegend();
