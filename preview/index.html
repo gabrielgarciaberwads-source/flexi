@@ -19,9 +19,7 @@ h1{font-size:32px}h2{font-size:23px}h3{font-size:18px}
 .small{font-size:14px}.sidebar{width:244px}.brand{font-size:26px}.brand svg{width:30px;height:30px}
 .workspace{font-size:15px;line-height:1.5}.workspace div{font-size:13px;color:#aaa}
 .nav button{font-size:16px;min-height:50px;gap:12px}.nav .icon{width:25px;height:25px}
-.profile strong{font-size:15px}.profile p{font-size:13px}.avatar{width:40px;height:40px;font-size:14px}
-.explore-trigger{width:100%;justify-content:flex-start;background:#1e1e1e;border-color:#3b3b3b;color:#eee;margin-bottom:16px;font-size:14px}
-.explore-trigger:hover:not(:disabled){background:#303030}
+.profile strong{font-size:15px}.profile p{font-size:13px}.avatar{width:40px;height:40px;min-width:40px;aspect-ratio:1;flex:0 0 40px;border-radius:50%;overflow:hidden;line-height:1;font-size:14px}
 main{margin-left:244px}.topbar{height:60px;font-size:14px}.demo{font-size:12px}
 .content{padding:26px 28px}.heading{margin-bottom:22px}.heading p{font-size:16px;line-height:1.5}
 .summary{gap:32px;padding-bottom:18px;margin-bottom:22px}.summary>div{flex:1}.summary strong{display:block;font-size:28px}.summary span{font-size:14px;line-height:1.4;display:block;margin-top:3px}
@@ -46,13 +44,9 @@ th{font-size:14px;padding:16px 20px}td{font-size:16px;padding:21px 20px}td p{fon
 .steps{gap:14px}.step{font-size:14px}.step strong{font-size:15px}.form-label{font-size:15px}.file p,.file input{font-size:14px}.aside-section p{font-size:14px}.aside-section .info{font-size:14px;grid-template-columns:1fr 1fr}
 .dialog{width:620px;padding:30px}.dialog>p{font-size:16px}.dialog .actions{flex-wrap:wrap}.option{font-size:16px;line-height:1.5;gap:16px}.option p{font-size:14px}.option>div{min-width:0}.status-footer{font-size:13px}
 .toast{font-size:16px;line-height:1.5;padding:16px 22px;max-width:min(640px,calc(100vw - 32px))}
-.visual-choice{border:1px solid #dce1e8;border-radius:6px;margin:18px 0;padding:20px}.visual-choice:has(button[aria-pressed=true]){border-color:var(--blue)}
-.visual-choice p{font-size:14px;line-height:1.6;color:var(--muted);margin:8px 0 16px}.icon-samples{display:flex;gap:26px;margin:20px 0;color:#303b4d}.icon-samples .icon{width:30px;height:30px}.visual-choice button{width:100%}.visual-choice button[aria-pressed=true]{background:#edf3ff;color:#174fca;border-color:#b2cbfa}
-.motion-control{display:flex;align-items:flex-start;gap:12px;margin:22px 0;font-size:16px}.motion-control input{width:20px;height:20px;accent-color:var(--blue);flex-shrink:0}.motion-control small{display:block;font-size:14px;color:var(--muted);margin-top:5px}.source-links{font-size:14px;line-height:1.8;display:flex;flex-wrap:wrap;gap:6px 16px}.source-links a{color:#1959d2}
 @keyframes surface-reveal{from{opacity:0}to{opacity:1}}
 @keyframes drawer-reveal{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 .overlay{animation:surface-reveal var(--motion-fast) ease-out}.drawer{animation:drawer-reveal var(--motion-panel) var(--ease-out)}.dialog,.toast{animation:surface-reveal 180ms ease-out}
-body[data-motion=off] *,body[data-motion=off] *::before,body[data-motion=off] *::after{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(max-width:1250px){.sidebar{width:218px}main{margin-left:218px}.content{padding:24px}.nav button{font-size:15px}.summary{gap:20px}.neg-grid{grid-template-columns:1fr}.neg-grid>aside{display:block}.neg-grid>aside .info{grid-template-columns:1fr 2fr}}
 @media(max-width:700px){.sidebar{width:60px;padding:20px 6px}main{margin-left:60px}.content{padding:20px 14px}.nav button{padding:12px 4px}.nav-footer{display:block;border:0;padding:0}.explore-trigger{padding:10px 4px;justify-content:center;min-height:44px}.explore-trigger span{display:none}.topbar{font-size:12px;padding:0 14px}.topbar>div{gap:7px}.demo{font-size:11px}h1{font-size:28px}.heading p{font-size:15px}.summary{gap:16px}.summary>div{flex:0 0 calc(50% - 8px)}.summary strong{font-size:26px}.summary span{font-size:13px}.toolbar{padding:12px;gap:10px}.month{flex-wrap:wrap;gap:8px}.month strong{min-width:0;flex:1;font-size:16px}.month button:last-child{flex-basis:100%;margin:0}.toolbar>select{width:100%}.search{min-width:0;flex-basis:100%}.filterline{padding:12px;font-size:14px}.scroll{max-height:560px}.legend{font-size:13px;gap:10px}.drawer{width:100%}.drawer-head,.drawer-body{padding:20px}.drawer-head h2{font-size:22px}.info{grid-template-columns:1fr 1.2fr;font-size:15px;gap:16px 12px}.drawer-foot{flex-wrap:wrap;padding:16px 20px}.drawer-foot button{flex:1}.section{padding:20px}.exchange-side h3{font-size:23px}.neg-grid>aside{display:block}.option{flex-wrap:wrap}.option>div{flex-basis:100%}.dialog{padding:22px}.dialog .actions button{flex:1}.bottom-note{font-size:13px}.toast{left:50%;font-size:14px}}
@@ -80,8 +74,7 @@ body{background:#f6f5f2}
 .nav{gap:4px}.nav button{color:#575650;border:1px solid transparent;border-radius:6px;padding:11px 12px;min-height:48px}
 .nav button:hover{background:#f3f2ee;color:#1d1d1b}.nav button.active{background:#1d1d1b;color:#fff}
 .nav-footer{border-top:1px solid var(--line);padding-top:14px}.profile{padding:10px 8px}.profile strong{color:#24231f}.profile p{color:#74726c}
-.avatar{background:#e8e6e0;color:#2b2a26}.explore-trigger{background:#fff;border-color:#d9d7d1;color:#484741;margin-bottom:12px}
-.explore-trigger:hover:not(:disabled){background:#f3f2ee;color:#1d1d1b}
+.avatar{background:#e8e6e0;color:#2b2a26}
 main{margin-left:252px}.topbar{background:#fff}.content{max-width:1720px}
 .dashboard-tools{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}
 .dashboard-tools .search{width:min(420px,100%)}.dashboard-tools .search input{width:100%;background:#fff}
@@ -123,7 +116,7 @@ main{margin-left:252px}.topbar{background:#fff}.content{max-width:1720px}
 .year-grid{display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:1px;background:var(--line)}
 .mini-month{background:#fff;padding:16px;min-width:0}.mini-month-header{width:100%;justify-content:flex-start;border:0;min-height:36px;padding:4px 2px;margin-bottom:5px;font-size:16px;font-weight:700;text-transform:capitalize}
 .mini-weekdays,.mini-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}.mini-weekdays span{font-size:11px;color:var(--muted);text-align:center;padding:3px 0}
-.year-day{position:relative;border:0;border-radius:4px;min-height:31px;padding:3px 1px;font-size:12px;background:#fff}.year-day.outside{visibility:hidden}.year-day.has-items{font-weight:700}.year-day.is-selected,.month-day-number.is-selected,.week-day.is-selected .week-day-header{outline:2px solid #1d1d1b;outline-offset:-2px}
+.year-day{position:relative;border:0;border-radius:4px;min-height:31px;padding:3px 1px;font-size:12px;background:#fff}.year-day.outside{visibility:hidden}.year-day.has-items{font-weight:700}.year-day.is-selected,.month-day-number.is-selected{outline:2px solid #1d1d1b;outline-offset:-2px}
 .year-markers{position:absolute;left:50%;bottom:3px;display:flex;gap:2px;transform:translateX(-50%)}.year-marker{width:4px;height:4px;border-radius:50%;background:#8a8882}.year-marker.available{background:#4c9d78}.year-marker.use{background:#8a9bb6}.year-marker.waiting{background:#d4ab4f}.year-marker.reserved{background:#9e80cf}.year-marker.blocked{background:#cf7c88}.year-marker.noanswer{background:#c2c6cc}
 .month-calendar{min-width:720px}.month-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));position:sticky;top:0;z-index:5;background:#f7f6f2;border-bottom:1px solid var(--line)}
 .month-weekdays span{padding:10px 8px;text-align:right;color:var(--muted);font-size:12px;font-weight:700}
@@ -135,10 +128,6 @@ main{margin-left:252px}.topbar{background:#fff}.content{max-width:1720px}
 .month-event:hover{outline:1px solid currentColor;filter:brightness(.98)}.month-event-text{overflow:hidden;text-overflow:ellipsis}
 .month-overflow{position:relative;z-index:3;grid-column:6/8;grid-row:5;align-self:center;justify-self:end;min-height:25px;padding:2px 8px;margin-right:4px;border:0;background:#fff;font-size:12px;font-weight:700}
 .calendar-overflow-list{margin-top:20px;border-top:1px solid var(--line)}.calendar-overflow-item{width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;justify-content:space-between;text-align:left;padding:13px 4px;min-height:0}.calendar-overflow-item span{color:var(--muted);font-size:13px}
-.week-agenda{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));min-width:1050px;min-height:440px}.week-day{border-right:1px solid var(--line);min-width:0}.week-day:last-child{border-right:0}
-.week-day-header{position:sticky;top:0;z-index:2;background:#f7f6f2;border-bottom:1px solid var(--line);padding:12px;text-align:left}.week-day-header strong{display:block;font-size:16px;text-transform:capitalize}.week-day-header span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
-.week-day-items{display:flex;flex-direction:column;gap:8px;padding:10px}.week-empty{color:#8a8882;font-size:12px;padding:6px 2px}
-.week-item{display:block;text-align:left;min-height:0;padding:10px;border-radius:5px;border:0;border-left:3px solid currentColor;white-space:normal}.week-item strong,.week-item span{display:block}.week-item strong{font-size:13px;line-height:1.35}.week-item span{font-size:12px;line-height:1.4;margin-top:5px}.week-item:hover{outline:1px solid currentColor;filter:brightness(.98)}
 @media(max-width:1100px){.calendar-commandbar{grid-template-columns:auto minmax(170px,1fr) auto}.calendar-commandbar .focus-toggle{grid-column:1/-1;justify-self:end}.calendar-filters{grid-template-columns:repeat(3,1fr)}.calendar-filters .search{grid-column:1/-1}.year-grid{grid-template-columns:repeat(2,minmax(210px,1fr))}}
 @media(max-width:700px){.calendar-commandbar{grid-template-columns:1fr auto;padding:12px;gap:9px}.calendar-navigation{grid-column:1/-1}.calendar-navigation button:nth-child(2){flex:1}.calendar-period-title{grid-column:1/-1;grid-row:2;text-align:left;font-size:19px}.calendar-segmented{grid-column:1/-1;grid-row:3}.calendar-segmented button{flex:1;padding:7px;min-height:42px}.calendar-commandbar .focus-toggle{grid-column:1/-1;grid-row:4;width:100%}.calendar-filters{grid-template-columns:1fr;padding:12px;gap:8px}.calendar-filters select{min-width:0}.calendar-filters .search{grid-column:1}.calendar-context{align-items:flex-start;padding:9px 12px;font-size:12px}.calendar-context span:last-child{display:none}.calendar-stage{min-height:420px;max-height:none}.year-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1px}.mini-month{padding:8px 6px}.mini-month-header{font-size:13px;min-height:30px;margin:0}.mini-weekdays,.mini-days{gap:0}.mini-weekdays span{font-size:9px}.year-day{min-height:25px;font-size:10px;padding:1px}.year-marker{width:3px;height:3px}.month-calendar{min-width:0}.month-weekdays span{font-size:10px;padding:7px 2px;text-align:center}.month-week{grid-template-rows:28px repeat(3,14px) 24px;min-height:95px}.month-day-number{min-width:25px;min-height:25px;font-size:11px;padding:2px 4px}.month-event{min-height:7px;height:7px;padding:0;margin:1px;border-left-width:2px}.month-event-text{display:none}.month-overflow{min-height:20px;padding:0 3px;margin-right:2px;font-size:10px}.week-agenda{display:flex;flex-direction:column;min-width:0}.week-day{border-right:0;border-bottom:1px solid var(--line)}.week-day-header{position:static;display:flex;align-items:baseline;justify-content:space-between;padding:11px 12px}.week-day-header strong{font-size:15px}.week-day-header span{margin:0}.week-day-items{padding:9px 12px}.calendar-focus .calendar-commandbar{display:grid;grid-template-columns:1fr}.calendar-focus .calendar-focus-title{display:none}.calendar-focus .calendar-filters{display:grid}.calendar-focus .calendar-context{display:flex}}
 /* Exchange detail. All operational colors below are semantic UI colors, not
@@ -282,7 +271,7 @@ main,.content,.heading>div,.dashboard-tools,.calendar-commandbar,.calendar-filte
 <main id="main-content" tabindex="-1"><div class="topbar"><button class="ghost mobile-nav-toggle" type="button" data-action="mobile-nav-open" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div class="topbar-context">Ownerinc <span>/</span> <span id="breadcrumb">Dashboard</span></div><div class="topbar-meta"><span class="demo">Prévia · dados fictícios</span><span>29 set 2026</span></div></div><div id="app" class="content"></div></main><div id="layers"></div><div id="notifications" aria-live="polite" aria-atomic="true"></div>
 <script>
 const paths={dashboard:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',calendar:'M4 5h16v16H4zM8 3v4M16 3v4M4 10h16M8 14h2M14 14h2',bank:'M3 7l9-4 9 4M4 8h16M6 9v9M12 9v9M18 9v9M3 21h18M4 18h16',requests:'M4 5h16v15H4zM8 3v4M16 3v4M8 11h8M8 15h5',users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 4a4 4 0 0 1 0 8M22 21v-2a4 4 0 0 0-3-3.87M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',plus:'M12 5v14M5 12h14',left:'M15 6l-6 6 6 6',right:'M9 6l6 6-6 6',close:'M6 6l12 12M18 6L6 18',search:'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',arrow:'M3 8h17l-4-4M21 16H4l4 4',check:'M5 12l4 4L19 6',clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',lock:'M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4',file:'M14 2H6v20h12V6zM14 2v5h5M9 12h6M9 16h6'};
-/* Lucide (ISC) and Phosphor (MIT). Complete notices included below. */
+/* Lucide is the fixed icon family used by this preview. */
 const iconFamilies={
 lucide:{
 dashboard:'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
@@ -297,28 +286,33 @@ bank:'<path d="M184,128v64H72V128Z" opacity="0.2"/><path d="M240,184h-8V57.9l9.6
 requests:'<path d="M208,48V216a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V48a8,8,0,0,1,8-8H96a39.83,39.83,0,0,0-8,24v8h80V64a39.83,39.83,0,0,0-8-24h40A8,8,0,0,1,208,48Z" opacity="0.2"/><path d="M168,152a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,152Zm-8-40H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm56-64V216a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V48A16,16,0,0,1,56,32H92.26a47.92,47.92,0,0,1,71.48,0H200A16,16,0,0,1,216,48ZM96,64h64a32,32,0,0,0-64,0ZM200,48H173.25A47.93,47.93,0,0,1,176,64v8a8,8,0,0,1-8,8H88a8,8,0,0,1-8-8V64a47.93,47.93,0,0,1,2.75-16H56V216H200Z"/>',
 users:'<path d="M136,108A52,52,0,1,1,84,56,52,52,0,0,1,136,108Z" opacity="0.2"/><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/>'}
 };
-let iconFamily='lucide';
-const icon=(n,family=iconFamily)=>{const shape=iconFamilies[family]?.[n];return `<svg class="icon ${shape&&family==='phosphor'?'duotone':''}" viewBox="0 0 ${shape&&family==='phosphor'?'256 256':'24 24'}" aria-hidden="true">${shape||`<path d="${paths[n]||paths.calendar}"/>`}</svg>`};
+const icon=n=>{const shape=iconFamilies.lucide[n];return `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${shape||`<path d="${paths[n]||paths.calendar}"/>`}</svg>`};
 paths.house='M3 10l9-7 9 7v11H3zM9 21v-8h6v8';
 paths.building='M5 21V3h14v18M3 21h18M9 7h1M14 7h1M9 11h1M14 11h1M10 21v-6h4v6';
-paths.sliders='M4 6h9M17 6h3M4 12h3M11 12h9M4 18h9M17 18h3M13 3v6M7 9v6M13 15v6';
 paths.expand='M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5';
 paths.collapse='M3 8h5V3M16 3v5h5M21 16h-5v5M8 21v-5H3';
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const units=Array.from({length:12},(_,i)=>({id:i+1,name:i<8?`Casa ${String(i+1).padStart(2,'0')}`:`Flat ${String(i-7).padStart(2,'0')}`,kind:i<8?'Casa':'Flat',type:['A','B','B','C','A','B','C','A','B','A','B','C'][i]}));
 const names=['Ana Souza','Carlos Almeida','Mariana Costa','João Pedro','Renata Lima','Fernanda Alves','Ricardo Gomes','Patrícia Melo','Bruno Lima','Juliana Martins','Eduardo Dias','Camila Rocha'];
 const labels={available:'Disponível no banco',use:'Uso confirmado',waiting:'Pedido de troca aberto',reserved:'Em negociação',blocked:'Bloqueada · inadimplência',noanswer:'Sem retorno'};
+const DEMO_TODAY='2026-09-29';
 const date=s=>new Date(s+'T12:00:00Z');const iso=d=>d.toISOString().slice(0,10);const add=(s,n)=>{const d=date(s);d.setUTCDate(d.getUTCDate()+n);return iso(d)};
 const short=s=>date(s).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',timeZone:'UTC'}).replace('.','');
-const full=s=>date(s).toLocaleDateString('pt-BR',{timeZone:'UTC'});const range=w=>`${short(w.start)} — ${short(w.end)} ${w.start.slice(0,4)}`;
+const full=s=>date(s).toLocaleDateString('pt-BR',{timeZone:'UTC'});const range=w=>w.start.slice(0,4)===w.end.slice(0,4)?`${short(w.start)} — ${short(w.end)} ${w.start.slice(0,4)}`:`${short(w.start)} ${w.start.slice(0,4)} — ${short(w.end)} ${w.end.slice(0,4)}`;
 let weeks=[],seq=180;
-units.forEach((u,i)=>{for(let j=0;j<5;j++){const start=add(u.kind==='Casa'?'2027-04-01':'2027-04-02',j*7);const state=['use','available','noanswer','waiting','use','reserved','available','blocked'][(i*3+j)%8];weeks.push({id:`SEM-${++seq}`,unit:u.id,start,end:add(start,7),state,owner:names[i],originalOwner:names[i],original:state!=='available',history:[]})}});
+const houseAnchors=['2026-01-08','2026-03-05','2026-07-02','2026-09-03','2026-10-29'];
+const flatAnchors=['2026-01-09','2026-05-22','2026-09-25','2026-11-06','2026-12-04'];
+units.forEach((u,i)=>{for(let j=0;j<5;j++){const unitOffset=u.kind==='Casa'?i:i-8,start=add(u.kind==='Casa'?houseAnchors[j]:flatAnchors[j],unitOffset*7);weeks.push({id:`SEM-${++seq}`,unit:u.id,start,end:add(start,7),state:'use',owner:names[i],originalOwner:names[i],original:true,history:[]})}});
 const find=(unit,start)=>weeks.find(w=>w.unit===unit&&w.start===start);
-const origin=find(4,'2027-04-08');origin.state='waiting';origin.owner='João Pedro';
-const target=find(9,'2027-04-16');target.state='available';target.original=false;
-const expiredTarget=find(2,'2027-04-22');expiredTarget.state='reserved';
-const expiredOrigin=find(7,'2027-04-08');expiredOrigin.state='waiting';
-const origin2=find(8,'2027-04-15');origin2.state='waiting';
+const moveWeek=(unit,index,start)=>{const w=weeks.find(item=>item.unit===unit&&item.id===`SEM-${181+(unit-1)*5+index}`);w.start=start;w.end=add(start,7);return w};
+const origin=moveWeek(4,4,'2026-12-31');origin.state='waiting';origin.owner='João Pedro';
+const target=moveWeek(9,2,'2027-01-08');target.state='available';target.original=false;
+const expiredTarget=moveWeek(2,4,'2027-01-07');expiredTarget.state='reserved';expiredTarget.original=false;
+const expiredOrigin=moveWeek(7,4,'2026-12-31');expiredOrigin.state='waiting';
+const origin2=moveWeek(8,4,'2026-12-31');origin2.state='waiting';
+const operationalExceptions=new Set([origin.id,target.id,expiredTarget.id,expiredOrigin.id,origin2.id]);
+const futureStateExamples=new Map([[3,'blocked'],[7,'noanswer'],[11,'use'],[15,'blocked'],[18,'noanswer']]);
+weeks.filter(w=>w.start>DEMO_TODAY&&!operationalExceptions.has(w.id)).sort((a,b)=>a.start.localeCompare(b.start)||a.unit-b.unit||a.id.localeCompare(b.id)).forEach((w,index)=>{w.state=futureStateExamples.get(index)||'available';w.original=w.state!=='available'});
 let requests=[
   {id:'TR-0087',owner:'João Pedro',origin:origin.id,desired:[target.start],created:'2026-09-12',status:'Aberto',target:null,contact:false,evidence:'',responsible:'Paula Silva',observations:[],history:[]},
   {id:'TR-0088',owner:'Patrícia Melo',origin:origin2.id,desired:[target.start],created:'2026-09-15',status:'Aberto',target:null,contact:false,evidence:'',responsible:'Paula Silva',observations:[],history:[]},
@@ -327,10 +321,9 @@ let requests=[
 // The seeded reservation is the only negotiated inventory item in this preview.
 weeks.filter(w=>w.state==='reserved'&&w.id!==expiredTarget.id).forEach(w=>w.state='use');
 weeks.filter(w=>w.state==='waiting'&&!requests.some(r=>r.origin===w.id)).forEach(w=>w.state='noanswer');
-let view='dashboard',month=3,year=2027,filters={kind:'',type:'',state:'',q:'',only:false},activeRequest=null,returnFocus=null,dashboardQuery='',exchangeReturnView='requests',pendingExchangeConfirmation=null;
+let view='dashboard',month=9,year=2026,filters={kind:'',type:'',state:'',q:'',only:false},activeRequest=null,returnFocus=null,dashboardQuery='',exchangeReturnView='requests',pendingExchangeConfirmation=null;
 const filtersByView={calendar:filters,bank:{kind:'',unit:'',type:'',q:'',state:'',only:true}};
-const DEMO_TODAY='2026-09-29';
-let calendarView='month',calendarDate='2027-04-15',calendarOverflow={};
+let calendarView='month',calendarDate=DEMO_TODAY,calendarOverflow={};
 const $=s=>document.querySelector(s),getWeek=id=>weeks.find(w=>w.id===id),getUnit=w=>units.find(u=>u.id===w.unit),badge=w=>`<span class="badge ${w.state}">${labels[w.state]}</span>`;
 const options=r=>weeks.filter(w=>w.state==='available'&&r.desired.includes(w.start)).sort((a,b)=>a.start.localeCompare(b.start)||a.unit-b.unit||a.id.localeCompare(b.id));
 const compatible=w=>requests.filter(r=>!['Concluído','Em negociação','Prazo vencido'].includes(r.status)&&r.desired.includes(w.start)).sort((a,b)=>a.created.localeCompare(b.created)||a.id.localeCompare(b.id));
@@ -366,7 +359,7 @@ function exchangeBackLabel(){return {dashboard:'ao Dashboard',calendar:'ao Calen
 function toast(t){$('#notifications').innerHTML=`<div class="toast">${escapeHtml(t)}</div>`;setTimeout(()=>$('#notifications').innerHTML='',4500)}
 function nav(){const entries=[['dashboard','Dashboard','dashboard'],['calendar','Calendário','calendar'],['bank','Banco de semanas','bank'],['requests','Pedidos','requests'],['owners','Proprietários','users']];$('#nav').innerHTML=entries.map(([key,text,i])=>`<button data-nav="${key}" class="${view===key?'active':''}" aria-label="${text}" title="${text}" ${view===key?'aria-current="page"':''}>${icon(i)}<span>${text}</span></button>`).join('');$('#breadcrumb').textContent=entries.find(e=>e[0]===view)?.[1]|| (view==='new'?'Novo pedido':'Detalhe da troca')}
 function heading(title,subtitle,cta=true){return `<div class="heading"><div><h1>${title}</h1><p>${subtitle}</p></div>${cta?`<button class="primary" data-action="new">${icon('plus')} Novo pedido de troca</button>`:''}</div>`}
-function render(){nav();if(view==='dashboard')renderDashboard();if(view==='calendar')renderCalendar();if(view==='bank')renderBank();if(view==='requests')renderRequests();if(view==='owners')renderOwners();if(view==='new')renderNew();if(view==='negotiation')renderExchangeDetail()}
+function render(){nav();if(view==='dashboard')renderDashboard();if(view==='calendar')renderCalendar();if(view==='bank')renderBank();if(view==='requests')renderRequests();if(view==='owners')renderOwners();if(view==='new'){renderNew();$('input[name="desired"]').value='2027-01-08'}if(view==='negotiation')renderExchangeDetail()}
 function focusRenderedTarget(selector){const target=$(selector)||$('#app h1')||$('#main-content');if(!target)return;if(!target.matches('button,a[href],input,select,textarea,[tabindex]'))target.tabIndex=-1;target.focus({preventScroll:true})}
 function showView(v){closeLayer();if(sidebarOpen){setMobileNavigation(false,false);mobileNavigationReturnFocus=null}if(v!==view)setCalendarFocus(false,false);view=v;if(filtersByView[v])filters=filtersByView[v];render();focusRenderedTarget('#app h1')}
 let calendarFocus=false,calendarPageScroll=0;
@@ -440,9 +433,8 @@ function renderDashboard(){
     </div>`;
   renderDashboardColumns();
 }
-const calendarModes=['year','month','week'];
-const monthName=(monthIndex,style='long')=>new Date(Date.UTC(2027,monthIndex,1)).toLocaleDateString('pt-BR',{month:style,timeZone:'UTC'}).replace('.','');
-const weekdayName=s=>date(s).toLocaleDateString('pt-BR',{weekday:'short',timeZone:'UTC'}).replace('.','');
+const calendarModes=['year','month'];
+const monthName=(monthIndex,style='long')=>new Date(Date.UTC(2026,monthIndex,1)).toLocaleDateString('pt-BR',{month:style,timeZone:'UTC'}).replace('.','');
 const mondayOf=s=>add(s,-((date(s).getUTCDay()+6)%7));
 const calendarPerson=w=>w.state==='reserved'?`Reserva · ${requests.find(r=>r.target===w.id)?.owner||'Banco'}`:w.state==='available'?'Banco':w.owner;
 function filteredCalendarWeeks(){
@@ -455,21 +447,16 @@ function filteredCalendarWeeks(){
 function calendarPeriodTitle(){
   const d=date(calendarDate),calendarYear=d.getUTCFullYear(),calendarMonth=d.getUTCMonth();
   if(calendarView==='year')return String(calendarYear);
-  if(calendarView==='month')return `${monthName(calendarMonth)} de ${calendarYear}`;
-  const start=mondayOf(calendarDate),end=add(start,6),a=date(start),b=date(end);
-  if(a.getUTCFullYear()===b.getUTCFullYear()&&a.getUTCMonth()===b.getUTCMonth())return `${a.getUTCDate()} — ${b.getUTCDate()} ${monthName(a.getUTCMonth(),'short')} ${a.getUTCFullYear()}`;
-  const compact=value=>{const current=date(value);return `${current.getUTCDate()} ${monthName(current.getUTCMonth(),'short')}`};
-  if(a.getUTCFullYear()===b.getUTCFullYear())return `${compact(start)} — ${compact(end)} ${a.getUTCFullYear()}`;
-  return `${compact(start)} ${a.getUTCFullYear()} — ${compact(end)} ${b.getUTCFullYear()}`;
+  return `${monthName(calendarMonth)} de ${calendarYear}`;
 }
 function renderOperationalCalendar(){
-  $('#app').innerHTML=heading('Calendário de semanas','Visualize o ano, o mês ou a agenda semanal sem perder o contexto operacional.')+`
+  $('#app').innerHTML=heading('Calendário de semanas','Visualize o ano ou o mês sem perder o contexto operacional.')+`
     <section class="surface operational-calendar" data-calendar-view="${calendarView}">
       <header class="calendar-commandbar">
         <div class="calendar-focus-title">${icon('calendar')} Calendário de semanas</div>
         <div class="calendar-navigation"><button class="square" data-action="calendar-prev" aria-label="Período anterior">${icon('left')}</button><button data-action="calendar-today">Hoje</button><button class="square" data-action="calendar-next" aria-label="Próximo período">${icon('right')}</button></div>
         <h2 class="calendar-period-title" id="calendar-period-title" tabindex="-1" aria-live="polite"></h2>
-        <div class="calendar-segmented" role="group" aria-label="Visualização do calendário">${[['year','Ano'],['month','Mês'],['week','Semana']].map(([mode,label])=>`<button data-calendar-view="${mode}" aria-pressed="${calendarView===mode}">${label}</button>`).join('')}</div>
+        <div class="calendar-segmented" role="group" aria-label="Visualização do calendário">${[['year','Ano'],['month','Mês']].map(([mode,label])=>`<button data-calendar-view="${mode}" aria-pressed="${calendarView===mode}">${label}</button>`).join('')}</div>
         <button class="focus-toggle" data-calendar-focus aria-pressed="${calendarFocus}">${icon(calendarFocus?'collapse':'expand')} ${calendarFocus?'Voltar à visão normal':'Ampliar calendário'}</button>
       </header>
       <div class="calendar-filters">
@@ -493,7 +480,7 @@ function renderYearCalendar(records){
       if(index<leading)return '<span class="year-day outside" aria-hidden="true"></span>';
       const day=index-leading+1,current=`${selectedYear}-${String(monthIndex+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,items=yearRecords.filter(w=>w.start===current),states=[...new Set(items.map(w=>w.state))].slice(0,3);
       const itemText=items.length?`, ${items.length} ${items.length===1?'semana':'semanas'}: ${states.map(state=>labels[state]).join(', ')}`:'';
-      return `<button class="year-day ${items.length?'has-items':''} ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="${escapeHtml(`${full(current)}${itemText}. Abrir semana.`)}" title="${escapeHtml(items.length?states.map(state=>labels[state]).join(' · '):'Sem movimentações')}"><span>${day}</span>${states.length?`<span class="year-markers" aria-hidden="true">${states.map(state=>`<i class="year-marker ${state}" data-status="${state}"></i>`).join('')}</span>`:''}</button>`;
+      return `<button class="year-day ${items.length?'has-items':''} ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="month" aria-label="${escapeHtml(`${full(current)}${itemText}. Abrir mês.`)}" title="${escapeHtml(items.length?states.map(state=>labels[state]).join(' · '):'Sem movimentações')}"><span>${day}</span>${states.length?`<span class="year-markers" aria-hidden="true">${states.map(state=>`<i class="year-marker ${state}" data-status="${state}"></i>`).join('')}</span>`:''}</button>`;
     }).join('');
     return `<section class="mini-month"><button class="mini-month-header" data-calendar-month="${first}" aria-label="Abrir ${monthName(monthIndex)} de ${selectedYear} na visualização mensal">${monthName(monthIndex)}</button><div class="mini-weekdays" aria-hidden="true">${weekdays.map(day=>`<span>${day}</span>`).join('')}</div><div class="mini-days">${cells}</div></section>`;
   }).join('');
@@ -506,28 +493,23 @@ function renderMonthCalendar(records){
   const weekdays=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];let rows='';
   for(let rowStart=gridStart;rowStart<gridEnd;rowStart=add(rowStart,7)){
     const rowEnd=add(rowStart,7),rowItems=monthRecords.filter(w=>w.start<rowEnd&&w.end>rowStart),shown=rowItems.slice(0,3),hidden=rowItems.slice(3),key=rowStart;
-    const days=Array.from({length:7},(_,index)=>{const current=add(rowStart,index),outside=date(current).getUTCMonth()!==calendarMonth;return `<div class="month-day ${outside?'outside':''}" style="grid-column:${index+1};grid-row:1/-1"><button class="month-day-number ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="week" aria-label="Abrir semana de ${full(current)}">${date(current).getUTCDate()}</button></div>`}).join('');
+    const days=Array.from({length:7},(_,index)=>{const current=add(rowStart,index),outside=date(current).getUTCMonth()!==calendarMonth;return `<div class="month-day ${outside?'outside':''}" style="grid-column:${index+1};grid-row:1/-1"><button class="month-day-number ${current===calendarDate?'is-selected':''}" data-calendar-date="${current}" data-calendar-drill="month" aria-label="Selecionar ${full(current)}">${date(current).getUTCDate()}</button></div>`}).join('');
     const items=shown.map((w,index)=>{const segmentStart=w.start>rowStart?w.start:rowStart,segmentEnd=w.end<rowEnd?w.end:rowEnd,startColumn=Math.round((date(segmentStart)-date(rowStart))/86400000)+1,span=Math.max(1,Math.round((date(segmentEnd)-date(segmentStart))/86400000)),u=getUnit(w),label=`${u.name} · ${labels[w.state]}`;return `<button class="month-event ${w.state} ${w.start<rowStart?'continues-before':''} ${w.end>rowEnd?'continues-after':''}" data-week="${w.id}" data-period-start="${w.start}" data-period-end="${w.end}" data-segment-start="${segmentStart}" data-segment-end="${segmentEnd}" style="grid-column:${startColumn}/span ${span};grid-row:${index+2}" title="${escapeHtml(`${label} · ${range(w)}`)}" aria-label="${escapeHtml(`${label}, ${range(w)}, ${calendarPerson(w)}`)}"><span class="status-symbol" aria-hidden="true">${icon(stateIcon(w.state))}</span><span class="month-event-text">${escapeHtml(label)}</span></button>`}).join('');
     if(hidden.length)calendarOverflow[key]={title:`${short(rowStart)} — ${short(add(rowEnd,-1))}`,ids:hidden.map(w=>w.id)};
     rows+=`<div class="month-week">${days}${items}${hidden.length?`<button class="month-overflow" data-calendar-overflow="${key}" aria-label="Mostrar mais ${hidden.length} itens de ${short(rowStart)} a ${short(add(rowEnd,-1))}">+${hidden.length} itens</button>`:''}</div>`;
   }
   return {html:`<div class="month-calendar" data-calendar-render="month"><div class="month-weekdays" aria-hidden="true">${weekdays.map(day=>`<span>${day}</span>`).join('')}</div>${rows}</div>`,count:monthRecords.length};
 }
-function renderWeekCalendar(records){
-  const weekStart=mondayOf(calendarDate),weekEnd=add(weekStart,7),weekRecords=records.filter(w=>w.start>=weekStart&&w.start<weekEnd);
-  const days=Array.from({length:7},(_,index)=>{const current=add(weekStart,index),items=weekRecords.filter(w=>w.start===current);return `<section class="week-day ${current===calendarDate?'is-selected':''}"><header class="week-day-header"><strong>${weekdayName(current)}</strong><span>${short(current)}</span></header><div class="week-day-items">${items.length?items.map(w=>{const u=getUnit(w);return `<button class="week-item ${w.state}" data-week="${w.id}" aria-label="${escapeHtml(`${u.name}, ${range(w)}, ${labels[w.state]}`)}"><strong>${u.name} · ${labels[w.state]}</strong><span>${range(w)}</span><span>${escapeHtml(calendarPerson(w))}</span></button>`}).join(''):'<p class="week-empty">Sem movimentações.</p>'}</div></section>`}).join('');
-  return {html:`<div class="week-agenda" data-calendar-render="week">${days}</div>`,count:weekRecords.length};
-}
 function renderOperationalGrid(){
   if(view!=='calendar')return;
-  const records=filteredCalendarWeeks(),result=calendarView==='year'?renderYearCalendar(records):calendarView==='week'?renderWeekCalendar(records):renderMonthCalendar(records);
+  const records=filteredCalendarWeeks(),result=calendarView==='year'?renderYearCalendar(records):renderMonthCalendar(records);
   const root=$('.operational-calendar');if(root)root.dataset.calendarView=calendarView;
   $('#calendar-period-title').textContent=calendarPeriodTitle();
   document.querySelectorAll('button[data-calendar-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.calendarView===calendarView)));
   const unit=result.count===1?'semana':'semanas';$('#visible-count').textContent=`${result.count} ${unit} neste período`;
   const empty=result.count?'':'<div class="calendar-empty-state" role="status">Nenhuma semana corresponde aos filtros neste período.</div>';
   $('#calendar-grid').innerHTML=empty+result.html;
-  const modeLabel={year:'Ano',month:'Mês',week:'Semana'}[calendarView];$('[data-action=calendar-prev]').setAttribute('aria-label',`${modeLabel} anterior`);$('[data-action=calendar-next]').setAttribute('aria-label',`Próxim${calendarView==='week'?'a':'o'} ${modeLabel.toLocaleLowerCase('pt-BR')}`);
+  const modeLabel={year:'Ano',month:'Mês'}[calendarView];$('[data-action=calendar-prev]').setAttribute('aria-label',`${modeLabel} anterior`);$('[data-action=calendar-next]').setAttribute('aria-label',`Próximo ${modeLabel.toLocaleLowerCase('pt-BR')}`);
 }
 function setCalendarView(mode,nextDate=calendarDate,focusTarget='control'){
   if(!calendarModes.includes(mode))return;
@@ -543,7 +525,6 @@ function moveCalendar(direction){
   if(calendarView==='month'){
     const day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+direction);d.setUTCDate(Math.min(day,new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate()));
   }
-  if(calendarView==='week')d.setUTCDate(d.getUTCDate()+direction*7);
   calendarDate=iso(d);renderOperationalGrid();
 }
 function openCalendarOverflow(key){
@@ -557,7 +538,7 @@ function renderCalendar(){
   $('#app').innerHTML=heading(title,bank?'Pesquise semanas disponíveis e encontre os pedidos que elas podem atender.':'Todas as semanas, seus titulares e a situação de uso.')+`
     <div class="summary">${bank?`<div><strong>${available}</strong><span>semanas disponíveis no estoque</span></div><div><strong>${weeks.filter(w=>w.state==='available'&&getUnit(w).kind==='Casa').length}</strong><span>semanas em casas</span></div><div><strong>${weeks.filter(w=>w.state==='available'&&getUnit(w).kind==='Flat').length}</strong><span>semanas em flats</span></div>`:`<div><strong>${weeks.length}</strong><span>semanas cadastradas</span></div><div><strong>${available}</strong><span>disponíveis no banco</span></div><div><strong>${requests.filter(r=>r.status!=='Concluído').length}</strong><span>pedidos abertos</span></div><div><strong>${requests.filter(r=>r.expired&&r.target).length}</strong><span>negociação com prazo vencido</span></div>`}</div>
     <section class="surface">
-      <div class="toolbar"><div class="month"><div class="calendar-focus-title">${icon(bank?'bank':'calendar')} ${title}</div><button class="square" data-action="prev" aria-label="Mês anterior">${icon('left')}</button><strong id="month-label"></strong><button class="square" data-action="next" aria-label="Próximo mês">${icon('right')}</button><button data-action="reset-month">Abril 2027</button><button class="focus-toggle" data-calendar-focus aria-pressed="${calendarFocus}">${icon(calendarFocus?'collapse':'expand')} ${calendarFocus?'Voltar à visão normal':'Ampliar calendário'}</button></div>
+      <div class="toolbar"><div class="month"><div class="calendar-focus-title">${icon(bank?'bank':'calendar')} ${title}</div><button class="square" data-action="prev" aria-label="Mês anterior">${icon('left')}</button><strong id="month-label"></strong><button class="square" data-action="next" aria-label="Próximo mês">${icon('right')}</button><button data-action="reset-month">Outubro 2026</button><button class="focus-toggle" data-calendar-focus aria-pressed="${calendarFocus}">${icon(calendarFocus?'collapse':'expand')} ${calendarFocus?'Voltar à visão normal':'Ampliar calendário'}</button></div>
       <select id="kind-filter" aria-label="Tipo de acomodação"><option value="">Todos</option><option value="Casa">Casas</option><option value="Flat">Flats</option></select>
       ${bank?'<select id="unit-filter" aria-label="Unidade"></select>':''}
       ${bank?`<select id="type-filter" aria-label="Tipologia"><option value="">Todas as tipologias</option>${[...new Set(units.map(u=>u.type))].sort().map(t=>`<option value="${t}">Tipologia ${t}</option>`).join('')}</select>`:`<select id="state-filter" aria-label="Situação"><option value="">Todas as situações</option>${Object.entries(labels).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>`}
@@ -760,7 +741,7 @@ document.addEventListener('click',e=>{
   if(action==='close')closeLayer();
   if(action==='new'){selectedOrigin='';showView('new')}
   if(action==='prev'||action==='next'){const d=new Date(Date.UTC(year,month+(action==='next'?1:-1),1));month=d.getUTCMonth();year=d.getUTCFullYear();renderGrid()}
-  if(action==='reset-month'){month=3;year=2027;renderGrid()}
+  if(action==='reset-month'){month=9;year=2026;renderGrid()}
   if(action==='alternative')$('#alternatives').insertAdjacentHTML('beforeend','<div class="form-grid"><label class="form-label">Alternativa · check-in<input type="date" name="desired" required></label><button type="button" data-action="remove-alternative" style="align-self:end">Remover alternativa</button></div>');
   if(action==='remove-alternative')b.parentElement.remove();
 });
@@ -811,43 +792,16 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='Escape'&&calendarFocus)setCalendarFocus(false);
 });
-function openVisualExplorer(){
-  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  openLayer(`<header class="drawer-head"><div><h2 id="layer-title">Ícones e movimento</h2><p>Compare as opções diretamente nesta prévia.</p></div><button class="ghost square" data-action="close" aria-label="Fechar exploração">${icon('close')}</button></header>
-    <div class="drawer-body"><h3>Família dos ícones principais</h3><p class="muted">A seleção altera a navegação e os ícones do calendário.</p>
-    ${[['lucide','Lucide · Linear','Padrão aprovado. Contornos limpos e discretos, com uma linguagem mais técnica.'],['phosphor','Phosphor · Duotone','Alternativa com preenchimento suave para comparação.']].map(([key,title,description])=>`<section class="visual-choice"><h3>${title}</h3><p>${description}</p><div class="icon-samples">${['dashboard','calendar','bank','requests','users'].map(n=>icon(n,key)).join('')}</div><button data-icon-family="${key}" aria-pressed="${iconFamily===key}">${iconFamily===key?'Em uso:':'Experimentar'} ${title}</button></section>`).join('')}
-    <h3>Movimento funcional</h3><p class="muted">Drawer: entrada lateral de 220 ms. Modal e mensagens: aparição suave de 180 ms. Botões: resposta de cor em 140 ms.</p>
-    <label class="motion-control"><input id="motion-toggle" type="checkbox" ${document.body.dataset.motion!=='off'?'checked':''} ${reduced?'disabled':''}><span>Ativar animações curtas<small>${reduced?'Seu sistema solicita movimento reduzido. As animações estão desativadas.':'A preferência de movimento reduzido do sistema é respeitada.'}</small></span></label>
-    <button data-visual-action="replay">${icon('arrow')} Repetir abertura do painel</button>
-    <h3>Referências consultadas</h3><div class="source-links"><a href="https://beui.dev/docs/motion-patterns" target="_blank" rel="noopener noreferrer">beUI · movimento</a><a href="https://shadcndashboard.com/templates" target="_blank" rel="noopener noreferrer">Shadcn · painéis</a><a href="https://lucide.dev/" target="_blank" rel="noopener noreferrer">Lucide · ISC</a><a href="https://phosphoricons.com/" target="_blank" rel="noopener noreferrer">Phosphor · MIT</a></div>
-    </div><footer class="drawer-foot"><button class="primary" data-action="close">Voltar à prévia</button></footer>`);
-}
 document.addEventListener('click',e=>{
   const button=e.target.closest('button');if(!button)return;
   if(button.hasAttribute('data-calendar-focus'))setCalendarFocus(!calendarFocus);
-  if(button.dataset.visualAction==='open'||button.dataset.visualAction==='replay')openVisualExplorer();
-  if(button.dataset.iconFamily){
-    iconFamily=button.dataset.iconFamily;nav();
-    if(view==='calendar')renderOperationalGrid();
-    if(view==='bank'){
-      const scroll=$('.scroll'),left=scroll.scrollLeft,top=scroll.scrollTop;
-      renderGrid();scroll.scrollLeft=left;scroll.scrollTop=top;
-      $('.legend').innerHTML=calendarLegend();
-    }
-    document.querySelectorAll('[data-icon-family]').forEach(b=>{
-      const title=b.dataset.iconFamily==='phosphor'?'Phosphor · Duotone':'Lucide · Linear';
-      b.setAttribute('aria-pressed',String(b.dataset.iconFamily===iconFamily));
-      b.textContent=`${b.dataset.iconFamily===iconFamily?'Em uso:':'Experimentar'} ${title}`;
-    });
-  }
 });
-document.addEventListener('change',e=>{if(e.target.id==='motion-toggle')document.body.dataset.motion=e.target.checked?'on':'off';if(e.target.id==='type-filter'){filters.type=e.target.value;renderGrid()}});
-$('.nav-footer').insertAdjacentHTML('afterbegin',`<button class="explore-trigger" data-visual-action="open" aria-label="Explorar ícones e movimento">${icon('sliders')}<span>Ícones e movimento</span></button>`);
+document.addEventListener('change',e=>{if(e.target.id==='type-filter'&&view!=='calendar'){filters.type=e.target.value;renderGrid()}});
 syncResponsiveNavigation();
 render();
 </script>
 <!--
-Third-party icon notices. Only the five icons in each family above are embedded.
+Third-party icon notice. Only the five Lucide icons above are embedded.
 
 Lucide: ISC License. Copyright (c) 2026 Lucide Icons and Contributors.
 Permission to use, copy, modify, and/or distribute this software for any purpose
@@ -860,23 +814,6 @@ INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
 LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
-
-Phosphor: MIT License. Copyright (c) 2023 Phosphor Icons.
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 -->
 </body>
 </html>

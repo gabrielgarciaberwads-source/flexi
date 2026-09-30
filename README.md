@@ -14,12 +14,12 @@ HTML, CSS e JavaScript locais, não usa API ou servidor e funciona por uma URL
   três listas operacionais — semanas disponíveis, pedidos em atendimento e
   pedidos sem atendimento. As linhas abrem a semana ou o pedido, e os atalhos
   levam ao Banco de semanas e a Pedidos.
-- **Calendário:** abre em **Mês** e também oferece **Ano** e **Semana**. Mantém
-  data de contexto, pesquisa e filtros ao trocar de visualização. Ano apresenta
-  doze mini-calendários com marcadores; Mês usa grade de segunda a domingo,
-  períodos contínuos e listas de overflow; Semana organiza os registros por
-  data de entrada, sem régua de horários. Os itens abrem o mesmo drawer de
-  semana, e o calendário pode ocupar uma visão ampliada.
+- **Calendário:** abre em **Mês**, em setembro de 2026, e também oferece **Ano**.
+  Mantém data de contexto, pesquisa e filtros ao trocar de visualização. Ano
+  apresenta doze mini-calendários com marcadores; Mês usa grade de segunda a
+  domingo e linhas contínuas do check-in ao checkout. Selecionar um mês ou dia
+  no Ano abre o Mês correspondente, e selecionar um período abre o drawer da
+  semana. O calendário também pode ocupar uma visão ampliada.
 - **Detalhe da troca:** mostra metadados, origem, destino, consequência da
   transferência e quatro etapas: Pedido criado, Opção reservada, Aceite
   validado e Troca concluída. As ações disponíveis dependem do estado e cobrem
@@ -54,8 +54,10 @@ memória e refletem essas mutações durante a sessão.
 
 Nomes, semanas, pedidos e registros são fictícios. Todo o estado existe apenas
 em memória; recarregar a página reinicia a demonstração. O relógio da prévia é
-fixo em 29/09/2026 às 12h (UTC), e o calendário inicia no conjunto fictício de
-abril de 2027.
+fixo em 29/09/2026 às 12h (UTC), e o calendário inicia em setembro de 2026. Os
+60 períodos estão distribuídos pelos doze meses de 2026, com os exemplos de
+negociação que atravessam o ano chegando a janeiro de 2027. Períodos anteriores
+à data da demonstração não aparecem como estoque disponível futuro.
 
 Esta prévia simula o fluxo e não altera direitos de uso reais.
 
