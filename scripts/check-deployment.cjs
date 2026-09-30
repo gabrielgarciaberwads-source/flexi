@@ -5,18 +5,33 @@ const path = require('node:path');
 const DEFAULT_URL = 'https://preview-steel-beta.vercel.app/';
 const previewPath = path.join(__dirname, '..', 'preview', 'index.html');
 const target = new URL(process.env.FLEXI_PREVIEW_URL || process.argv[2] || DEFAULT_URL);
-target.searchParams.set('qa_revision', Date.now().toString());
 
 const digest = content => crypto.createHash('sha256').update(content).digest('hex');
+const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+const fetchPreview = async () => {
+  let lastStatus = 0, lastError;
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    target.searchParams.set('qa_revision', `${Date.now()}-${attempt}`);
+    try {
+      const response = await fetch(target, {
+        cache: 'no-store',
+        headers: { 'cache-control': 'no-cache', pragma: 'no-cache' }
+      });
+      if (response.ok) return response;
+      lastStatus = response.status;
+      if (![404, 429].includes(response.status) && response.status < 500) break;
+    } catch (error) {
+      lastError = error;
+    }
+    if (attempt < 5) await wait(attempt * 1000);
+  }
+  if (lastError && !lastStatus) throw lastError;
+  throw new Error(`A prévia pública respondeu HTTP ${lastStatus || 'indisponível'} após 5 tentativas.`);
+};
 
 (async () => {
   const local = fs.readFileSync(previewPath);
-  const response = await fetch(target, {
-    cache: 'no-store',
-    headers: { 'cache-control': 'no-cache', pragma: 'no-cache' }
-  });
-  if (!response.ok) throw new Error(`A prévia pública respondeu HTTP ${response.status}.`);
-
+  const response = await fetchPreview();
   const remote = Buffer.from(await response.arrayBuffer());
   const text = remote.toString('utf8');
   const requiredMarkers = [

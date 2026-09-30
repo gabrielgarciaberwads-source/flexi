@@ -270,5 +270,6 @@ Em 30/09/2026, antes do handoff:
 - auditoria npm standalone: 0 vulnerabilidades conhecidas;
 - suíte Playwright: aprovada;
 - execução por `file://`: aprovada;
-- prévia Vercel em desktop e mobile: aprovada;
+- prévia Vercel sem autenticação, em desktop e mobile: aprovada;
+- HTML remoto idêntico ao local pelo SHA-256 documentado: aprovado;
 - Git: `main` sincronizada no momento da publicação.
