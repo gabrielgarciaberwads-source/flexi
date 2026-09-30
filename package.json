@@ -1,11 +1,17 @@
 {
   "name": "ownerinc-flexi",
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.1",
   "private": true,
   "description": "Prévia operacional de gestão de troca de semanas da Ownerinc.",
   "scripts": {
     "test": "node scripts/check-preview.cjs",
-    "verify": "node scripts/check-preview.cjs"
+    "verify": "node scripts/check-preview.cjs",
+    "smoke:public": "node scripts/check-deployment.cjs",
+    "audit": "npm audit --workspaces=false",
+    "qa": "npm run verify && npm run audit"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0"

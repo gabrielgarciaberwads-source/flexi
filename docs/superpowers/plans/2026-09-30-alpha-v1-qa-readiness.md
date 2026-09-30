@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status:** concluído em `1.0.0-alpha.1`
+
 **Goal:** Entregar o repositório standalone do Flexi em estado verificável por um QA externo, com documentação coerente, cobertura dos requisitos públicos e limites do Alpha V1 explícitos.
 
 **Architecture:** Manter `preview/index.html` como protótipo estático e portátil por `file://`, sem introduzir framework ou backend antes da validação dos fluxos. Isolar o ambiente npm, remover resíduos de funcionalidades retiradas, ampliar a suíte Playwright e criar documentação operacional de handoff.
@@ -23,7 +25,6 @@
 ### Task 1: Isolar e versionar o projeto standalone
 
 **Files:**
-- Create: `.npmrc`
 - Modify: `.gitignore`
 - Delete: `preview/.gitignore`
 - Modify: `package.json`
@@ -31,17 +32,9 @@
 
 **Interfaces:**
 - Consumes: Node.js `>=20`, `package-lock.json` local.
-- Produces: scripts `npm run verify`, `npm run audit` e `npm run qa` independentes do workspace pai.
+- Produces: comandos e scripts `npm run verify`, `npm run audit` e `npm run qa` independentes do workspace pai.
 
-- [ ] **Step 1: Registrar a configuração npm local**
-
-Criar `.npmrc` com:
-
-```ini
-workspaces=false
-```
-
-- [ ] **Step 2: Consolidar arquivos ignorados**
+- [x] **Step 1: Consolidar arquivos ignorados**
 
 Adicionar ao `.gitignore` raiz:
 
@@ -54,7 +47,7 @@ test-results/
 
 Remover `preview/.gitignore`, pois sua única regra passa a ser coberta na raiz.
 
-- [ ] **Step 3: Declarar o Alpha V1 e os comandos de QA**
+- [x] **Step 2: Declarar o Alpha V1 e os comandos de QA**
 
 Atualizar `package.json` e `package-lock.json` para `1.0.0-alpha.1`, declarar
 `"node": ">=20"` e adicionar:
@@ -64,13 +57,13 @@ Atualizar `package.json` e `package-lock.json` para `1.0.0-alpha.1`, declarar
 "qa": "npm run verify && npm run audit"
 ```
 
-- [ ] **Step 4: Verificar o isolamento**
+- [x] **Step 3: Verificar o isolamento**
 
 Executar:
 
 ```sh
-npm ci
-npm audit
+npm ci --workspaces=false
+npm audit --workspaces=false
 ```
 
 Esperado: instalação baseada no lockfile do Flexi e `found 0 vulnerabilities`,
@@ -88,7 +81,7 @@ sem pacotes do workspace pai.
 - Consumes: fixtures `weeks`, `requests`, `DEMO_TODAY` e modos `year|month`.
 - Produces: shell com identificação `Alpha V1`, data padrão `2027-01-08` para novo pedido e fonte sem controles retirados.
 
-- [ ] **Step 1: Escrever verificações estruturais que falham no estado atual**
+- [x] **Step 1: Escrever verificações estruturais que falham no estado atual**
 
 Adicionar à suíte leituras do HTML e asserções para rejeitar:
 
@@ -98,14 +91,14 @@ expect(source).not.toMatch(/calendarView\s*===\s*['"]week|renderWeekCalendar/);
 expect(source).toContain('Alpha V1 · dados fictícios');
 ```
 
-- [ ] **Step 2: Executar a suíte e confirmar a falha**
+- [x] **Step 2: Executar a suíte e confirmar a falha**
 
 Executar `npm run verify`.
 
 Esperado: falha pela data antiga `2027-04-16` e pela identificação ainda ser
 `Prévia · dados fictícios`.
 
-- [ ] **Step 3: Corrigir a implementação mínima**
+- [x] **Step 3: Corrigir a implementação mínima**
 
 - trocar a identificação da topbar para `Alpha V1 · dados fictícios`;
 - usar `2027-01-08` diretamente no campo de primeira opção;
@@ -113,7 +106,7 @@ Esperado: falha pela data antiga `2027-04-16` e pela identificação ainda ser
 - remover código e estilos mortos exclusivos de Semana/explorador visual;
 - manter `prefers-reduced-motion` e os ícones Lucide usados pelo produto.
 
-- [ ] **Step 4: Executar a suíte**
+- [x] **Step 4: Executar a suíte**
 
 Executar `npm run verify`.
 
@@ -131,7 +124,7 @@ Esperado: PASS sem erro de console.
 - Consumes: funções globais do protótipo carregado por `file://`.
 - Produces: uma suíte única que falha quando uma regra publicada regride.
 
-- [ ] **Step 1: Cobrir navegação e telas auxiliares**
+- [x] **Step 1: Cobrir navegação e telas auxiliares**
 
 Adicionar testes para:
 
@@ -142,12 +135,12 @@ Proprietários → drawer de semanas
 Novo pedido → adicionar/remover alternativa
 ```
 
-- [ ] **Step 2: Cobrir Calendário e Banco**
+- [x] **Step 2: Cobrir Calendário e Banco**
 
 Adicionar testes para busca, filtros, estado vazio, persistência Ano/Mês,
 overflow `+N itens`, abertura do drawer e filtros de unidade/tipologia no Banco.
 
-- [ ] **Step 3: Cobrir prioridade e validações negativas**
+- [x] **Step 3: Cobrir prioridade e validações negativas**
 
 Adicionar fixtures temporárias em memória para provar:
 
@@ -157,7 +150,7 @@ contactIssue(request, origin, target) rejeita origem com menos de 90 dias
 confirmationMatches(...) rejeita estado alterado após abertura do modal
 ```
 
-- [ ] **Step 4: Cobrir sincronização pós-confirmação**
+- [x] **Step 4: Cobrir sincronização pós-confirmação**
 
 Depois de concluir `TR-0087`, verificar pela interface:
 
@@ -169,13 +162,13 @@ Pedidos: TR-0087 concluído
 Novo pedido: semana recebida ausente das origens elegíveis
 ```
 
-- [ ] **Step 5: Cobrir acessibilidade e layouts**
+- [x] **Step 5: Cobrir acessibilidade e layouts**
 
 Validar desktop `1440x960`, tablet `900x900` e mobile `390x844`, incluindo
 foco, `Escape`, trap de modal/menu, avatar 1:1, contraste, movimento reduzido,
 console e ausência de overflow de página.
 
-- [ ] **Step 6: Executar a suíte completa**
+- [x] **Step 6: Executar a suíte completa**
 
 Executar `npm run verify`.
 
@@ -195,7 +188,7 @@ Esperado: PASS com capturas em `artifacts/`.
 - Consumes: comportamento confirmado pela Task 3.
 - Produces: documentação pública sem afirmações não testadas.
 
-- [ ] **Step 1: Reestruturar o README**
+- [x] **Step 1: Reestruturar o README**
 
 Adicionar seções explícitas:
 
@@ -211,22 +204,22 @@ Limitações conhecidas
 Critérios para sair do Alpha
 ```
 
-- [ ] **Step 2: Criar o handoff de QA**
+- [x] **Step 2: Criar o handoff de QA**
 
 Documentar baseline `15/1/2/60`, casos manuais, breakpoints, severidades,
 modelo de bug, limitações deliberadas e URL pública.
 
-- [ ] **Step 3: Arquivar corretamente o plano antigo**
+- [x] **Step 3: Arquivar corretamente o plano antigo**
 
 Adicionar no topo do plano de 29/09/2026 um aviso de documento histórico,
 indicando que Semana e o explorador visual foram removidos posteriormente.
 
-- [ ] **Step 4: Registrar a revisão**
+- [x] **Step 4: Registrar a revisão**
 
 Criar `CHANGELOG.md` com a entrada `1.0.0-alpha.1`, data `2026-09-30`, escopo
 funcional e limitações conhecidas.
 
-- [ ] **Step 5: Conferir contradições**
+- [x] **Step 5: Conferir contradições**
 
 Executar buscas por datas antigas, combinações de modos removidos, marcadores
 de pendência e `Ícones e movimento`. Nenhuma ocorrência contraditória pode
@@ -244,17 +237,17 @@ permanecer em documentação corrente ou código de produto.
 - Consumes: scripts npm das Tasks 1 e 3.
 - Produces: gate reproduzível no GitHub e evidência final local/remota.
 
-- [ ] **Step 1: Criar o workflow**
+- [x] **Step 1: Criar o workflow**
 
 Configurar Ubuntu, Node.js 20, `npm ci`, instalação do Chromium Playwright,
 `npm run verify` e `npm run audit` para pushes e pull requests de `main`.
 
-- [ ] **Step 2: Executar instalação limpa e QA local**
+- [x] **Step 2: Executar instalação limpa e QA local**
 
 Executar:
 
 ```sh
-npm ci
+npm ci --workspaces=false
 npx playwright install chromium
 npm run qa
 git diff --check
@@ -262,13 +255,13 @@ git diff --check
 
 Esperado: todos os comandos passam.
 
-- [ ] **Step 3: Inspecionar a aplicação**
+- [x] **Step 3: Inspecionar a aplicação**
 
 Abrir a aplicação em desktop e mobile, verificar Dashboard, Calendário Mês/Ano,
 drawer e Detalhe da troca. Confirmar ausência de clipping, controles removidos
 ou erros no console.
 
-- [ ] **Step 4: Commitar e publicar**
+- [x] **Step 4: Commitar e publicar**
 
 ```sh
 git add .
@@ -276,12 +269,12 @@ git commit -m "chore: prepare Alpha V1 for external QA"
 git push origin main
 ```
 
-- [ ] **Step 5: Atualizar e validar a prévia pública**
+- [x] **Step 5: Atualizar e validar a prévia pública**
 
 Publicar `preview/` na Vercel e confirmar HTTP 200 em
 `https://preview-steel-beta.vercel.app`, título correto e controles Ano/Mês.
 
-- [ ] **Step 6: Confirmar estado final**
+- [x] **Step 6: Confirmar estado final**
 
 Executar `git status -sb` e comparar `HEAD` com `origin/main`.
 

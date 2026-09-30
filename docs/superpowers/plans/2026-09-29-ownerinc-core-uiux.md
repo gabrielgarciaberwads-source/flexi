@@ -1,5 +1,12 @@
 # Ownerinc Flexi Core UI/UX Implementation Plan
 
+> **Documento histórico.** Este plano registra o redesign executado em
+> 29/09/2026 e não é a especificação corrente do produto. A decisão posterior
+> do Alpha V1 removeu a visualização Semana e o explorador de ícones/movimento,
+> definiu setembro de 2026 como mês inicial e redistribuiu os dados fictícios.
+> Para o estado atual, consulte `README.md`, `docs/QA-HANDOFF.md` e
+> `docs/superpowers/specs/2026-09-30-alpha-v1-qa-readiness-design.md`.
+
 > **For agentic workers:** Implement one task at a time, commit only files in `projects/Flexi-V1`, run the named checks, and write the requested report before returning.
 
 **Goal:** Redesign the Flexi operational core with an Ownerinc shell, a dashboard home, an Apple Calendar-inspired year/month/week calendar, and an integrated exchange-detail flow while preserving every validated exchange rule.

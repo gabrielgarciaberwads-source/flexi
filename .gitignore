@@ -1,3 +1,7 @@
 .superpowers/
 artifacts/
 node_modules/
+.vercel/
+.openchamber/
+playwright-report/
+test-results/

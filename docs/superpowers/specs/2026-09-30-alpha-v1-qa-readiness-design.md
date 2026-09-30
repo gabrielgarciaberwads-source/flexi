@@ -1,7 +1,9 @@
 # Flexi Alpha V1 — QA Readiness Design
 
-**Data:** 30/09/2026  
-**Status:** aprovado para planejamento  
+**Data:** 30/09/2026
+
+**Status:** implementado e validado em `1.0.0-alpha.1`
+
 **Escopo:** auditoria completa do Alpha V1 sem refatoração estrutural do protótipo
 
 ## Objetivo

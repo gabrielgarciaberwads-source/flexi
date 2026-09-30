@@ -1,0 +1,51 @@
+name: Alpha V1 QA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Use Node.js 20.20.2
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20.20.2
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --workspaces=false
+
+      - name: Install Chromium
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Verify product
+        run: npm run verify
+
+      - name: Audit dependencies
+        run: npm run audit
+
+      - name: Verify public preview
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run smoke:public
+
+      - name: Upload QA screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: flexi-qa-artifacts
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
